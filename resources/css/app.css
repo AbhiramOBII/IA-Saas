@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+@import '@fontsource/poppins/300.css';
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/livewire/src/**/*.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source './../../app/**/*.php';
+
+@theme {
+    /* Typography */
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand – Primary */
+    --color-ia-primary:      #3F51B5;
+    --color-ia-primary-dark: #303F9F;
+
+    /* Brand – Accent */
+    --color-ia-accent:       #06B6D4;
+
+    /* Backgrounds */
+    --color-ia-bg:           #F8FAFC;
+    --color-ia-bg-dark:      #0F172A;
+
+    /* Surfaces */
+    --color-ia-surface:      #FFFFFF;
+    --color-ia-surface-dark: #1E293B;
+
+    /* Text */
+    --color-ia-text:         #0F172A;
+    --color-ia-text-light:   #F8FAFC;
+
+    /* Status */
+    --color-ia-success:      #16A34A;
+    --color-ia-warning:      #F59E0B;
+    --color-ia-error:        #DC2626;
+}
+
+/* Base styles */
+@layer base {
+    body {
+        font-family: var(--font-sans);
+        background-color: var(--color-ia-bg);
+        color: var(--color-ia-text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference — Intelligent Accelerators</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:      #3F51B5;
+            --primary-dark: #303F9F;
+            --accent:       #06B6D4;
+            --bg-dark:      #0F172A;
+            --bg:           #F8FAFC;
+            --surface:      #FFFFFF;
+            --text:         #0F172A;
+            --text-muted:   #64748B;
+            --border:       #E2E8F0;
+            --success:      #16A34A;
+            --warning:      #D97706;
+            --error:        #DC2626;
+            --sidebar-w:    260px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ── SIDEBAR ── */
+        aside {
+            width: var(--sidebar-w);
+            background: var(--bg-dark);
+            position: fixed;
+            inset: 0 auto 0 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .sidebar-brand img {
+            height: 32px;
+            width: auto;
+        }
+
+        .sidebar-brand-fallback {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand-fallback .icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .sidebar-brand-fallback .icon svg { width: 18px; height: 18px; color: #fff; }
+        .sidebar-brand-fallback .name { color: #fff; font-weight: 600; font-size: 13px; line-height: 1.3; }
+        .sidebar-brand-fallback .sub  { color: var(--accent); font-size: 10px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; }
+
+        .sidebar-badge {
+            margin: 16px 20px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(6,182,212,.15);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 99px;
+            border: 1px solid rgba(6,182,212,.3);
+        }
+
+        .sidebar-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        nav { padding: 20px 12px; flex: 1; }
+
+        .nav-section { margin-bottom: 24px; }
+
+        .nav-section-label {
+            color: rgba(255,255,255,.35);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            padding: 0 8px;
+            margin-bottom: 6px;
+        }
+
+        nav a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            color: rgba(255,255,255,.6);
+            text-decoration: none;
+            font-size: 13px;
+            transition: all .15s;
+            margin-bottom: 2px;
+        }
+
+        nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+        nav a .badge {
+            margin-left: auto;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: .04em;
+        }
+
+        nav a .method-post   { background: rgba(251,191,36,.15); color: #FBBF24; }
+        nav a .method-get    { background: rgba(52,211,153,.15);  color: #34D399; }
+
+        aside footer {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            color: rgba(255,255,255,.25);
+            font-size: 11px;
+        }
+
+        aside footer a { color: rgba(255,255,255,.4); text-decoration: none; }
+        aside footer a:hover { color: rgba(255,255,255,.7); }
+
+        /* ── MAIN ── */
+        main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            padding: 48px 48px 80px;
+            max-width: 900px;
+        }
+
+        /* ── HEADER ── */
+        .page-header { margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .page-header p  { color: var(--text-muted); font-size: 15px; }
+
+        .meta-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+        .chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 99px;
+            font-size: 12px; font-weight: 500;
+            border: 1px solid;
+        }
+        .chip-blue   { background: rgba(63,81,181,.08); color: var(--primary); border-color: rgba(63,81,181,.2); }
+        .chip-cyan   { background: rgba(6,182,212,.08); color: #0891B2;        border-color: rgba(6,182,212,.2); }
+        .chip-slate  { background: #F1F5F9;             color: var(--text-muted); border-color: var(--border); }
+
+        /* ── SECTION ── */
+        .section { margin-bottom: 56px; }
+        .section-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+        .section-desc  { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+
+        /* ── ENDPOINT CARD ── */
+        .endpoint {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .endpoint-header {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .endpoint-header:hover { background: #FAFBFC; }
+
+        .method {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 11px; font-weight: 800;
+            padding: 4px 10px; border-radius: 6px;
+            letter-spacing: .06em;
+            min-width: 52px; text-align: center;
+        }
+
+        .method-POST { background: rgba(251,191,36,.12); color: #92400E; border: 1px solid rgba(251,191,36,.3); }
+        .method-GET  { background: rgba(52,211,153,.12); color: #065F46; border: 1px solid rgba(52,211,153,.3); }
+
+        .endpoint-path {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 13px; font-weight: 600;
+            color: var(--text);
+        }
+
+        .endpoint-summary { margin-left: auto; color: var(--text-muted); font-size: 12px; }
+
+        .auth-pill {
+            font-size: 10px; font-weight: 600;
+            padding: 2px 8px; border-radius: 99px;
+            background: rgba(63,81,181,.1); color: var(--primary);
+            border: 1px solid rgba(63,81,181,.2);
+        }
+
+        .endpoint-body { padding: 20px; }
+
+        /* ── TABS ── */
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+        .tab {
+            padding: 6px 14px; border-radius: 8px;
+            font-size: 12px; font-weight: 500;
+            cursor: pointer; border: 1px solid transparent;
+            color: var(--text-muted);
+            background: none;
+        }
+        .tab.active { background: var(--bg); border-color: var(--border); color: var(--text); }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── FIELDS TABLE ── */
+        .fields-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        .fields-table th {
+            text-align: left; font-size: 11px; font-weight: 600;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: var(--text-muted); padding: 8px 12px;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .fields-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+        .fields-table tr:last-child td { border-bottom: none; }
+
+        .field-name { font-family: 'SFMono-Regular', Consolas, monospace; font-weight: 600; color: var(--primary); }
+        .field-type { font-family: 'SFMono-Regular', Consolas, monospace; color: var(--text-muted); font-size: 12px; }
+        .required { color: var(--error); font-size: 10px; font-weight: 700; margin-left: 4px; }
+
+        /* ── CODE BLOCK ── */
+        .code-block {
+            background: #0F172A;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .code-block-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(255,255,255,.04);
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+
+        .code-lang {
+            font-size: 11px; font-weight: 600;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: rgba(255,255,255,.4);
+        }
+
+        .code-copy {
+            font-size: 11px; color: rgba(255,255,255,.4);
+            cursor: pointer; background: none; border: none;
+            padding: 2px 8px; border-radius: 4px;
+            transition: all .15s;
+        }
+
+        .code-copy:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #E2E8F0;
+        }
+
+        .k  { color: #94A3B8; }   /* keywords */
+        .s  { color: #86EFAC; }   /* strings */
+        .n  { color: #7DD3FC; }   /* numbers */
+        .p  { color: #F8FAFC; }   /* punctuation */
+        .c  { color: var(--accent); } /* cyan – keys */
+        .m  { color: var(--accent); } /* method */
+        .url{ color: #FDE68A; }   /* URL */
+        .cm { color: #475569; font-style: italic; } /* comments */
+
+        /* ── RESPONSE TABS ── */
+        .response-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+        .response-tab {
+            padding: 4px 12px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+            cursor: pointer; border: 1px solid transparent;
+        }
+        .response-tab.ok  { background: rgba(22,163,74,.1);  color: var(--success); border-color: rgba(22,163,74,.25); }
+        .response-tab.err { background: rgba(220,38,38,.1);  color: var(--error);   border-color: rgba(220,38,38,.25); }
+        .response-tab.active { outline: 2px solid currentColor; outline-offset: 1px; }
+
+        /* ── ERRORS TABLE ── */
+        .errors-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+        .errors-table th {
+            text-align: left; font-size: 11px; font-weight: 600;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: var(--text-muted); padding: 10px 14px;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .errors-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .errors-table tr:last-child td { border-bottom: none; }
+        .status { font-family: 'SFMono-Regular', Consolas, monospace; font-weight: 700; }
+        .s-200 { color: var(--success); }
+        .s-401 { color: var(--warning); }
+        .s-403 { color: var(--error); }
+        .s-422 { color: var(--primary); }
+        .s-500 { color: #7C3AED; }
+
+        /* ── CALLOUT ── */
+        .callout {
+            border-radius: 10px; padding: 14px 16px;
+            display: flex; gap: 10px; align-items: flex-start;
+            margin-bottom: 20px; font-size: 13px;
+        }
+        .callout-info    { background: rgba(6,182,212,.08); border: 1px solid rgba(6,182,212,.2); color: #0E7490; }
+        .callout-warning { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); color: #92400E; }
+        .callout svg { width: 16px; height: 16px; shrink: 0; margin-top: 1px; }
+
+        @media (max-width: 768px) {
+            aside { display: none; }
+            main  { margin-left: 0; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside>
+    <div class="sidebar-brand">
+        <img src="/images/Logo-white.png" alt="IA"
+             onerror="this.style.display='none';document.querySelector('.sidebar-brand-fallback').style.display='flex'">
+        <div class="sidebar-brand-fallback" style="display:none">
+            <div class="icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="name">Intelligent Accelerators</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-badge">API v1</div>
+
+    <nav>
+        <div class="nav-section">
+            <div class="nav-section-label">Overview</div>
+            <a href="#overview">Introduction</a>
+            <a href="#base-url">Base URL &amp; Headers</a>
+            <a href="#errors">Error Codes</a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-label">Authentication</div>
+            <a href="#login">
+                Login
+                <span class="badge method-post">POST</span>
+            </a>
+            <a href="#refresh">
+                Refresh Token
+                <span class="badge method-post">POST</span>
+            </a>
+            <a href="#logout">
+                Logout
+                <span class="badge method-post">POST</span>
+            </a>
+            <a href="#me">
+                Current User
+                <span class="badge method-get">GET</span>
+            </a>
+        </div>
+    </nav>
+
+    <footer>
+        &copy; <script>document.write(new Date().getFullYear())</script>
+        <a href="https://emergentconsultinginc.com/" target="_blank">Emergent Consulting Inc.</a>
+    </footer>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main>
+
+    <!-- Page header -->
+    <div class="page-header" id="overview">
+        <h1>API Reference</h1>
+        <p>REST API for the Intelligent Accelerators desktop application. All endpoints return JSON.</p>
+        <div class="meta-chips">
+            <span class="chip chip-blue">REST / JSON</span>
+            <span class="chip chip-cyan">OAuth 2.0 Password Grant</span>
+            <span class="chip chip-slate">Laravel Passport</span>
+        </div>
+    </div>
+
+    <!-- Base URL -->
+    <div class="section" id="base-url">
+        <h2 class="section-title">Base URL &amp; Headers</h2>
+        <p class="section-desc">All API requests must include the following headers.</p>
+
+        <div class="code-block">
+            <div class="code-block-header">
+                <span class="code-lang">Base URL</span>
+            </div>
+            <pre><span class="url">https://&lt;your-domain&gt;/api</span></pre>
+        </div>
+
+        <div class="code-block">
+            <div class="code-block-header">
+                <span class="code-lang">Required Headers</span>
+            </div>
+<pre><span class="c">Content-Type</span><span class="p">:  </span><span class="s">application/json</span>
+<span class="c">Accept</span><span class="p">:         </span><span class="s">application/json</span>
+
+<span class="cm">// Protected endpoints additionally require:</span>
+<span class="c">Authorization</span><span class="p">: </span><span class="s">Bearer &lt;access_token&gt;</span>
+<span class="c">X-Mac-Address</span><span class="p">: </span><span class="s">AA:BB:CC:DD:EE:FF</span></pre>
+        </div>
+
+        <div class="callout callout-warning">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+            </svg>
+            <span><strong>Device Binding:</strong> Tokens are bound to the MAC address used at login. Every protected request must send the same MAC via <code>X-Mac-Address</code>. A mismatch forces an immediate session revoke and returns <code>mac_mismatch</code>.</span>
+        </div>
+
+        <div class="callout callout-info">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            <span>The <code>Accept: application/json</code> header is required so Laravel returns JSON errors instead of HTML redirects.</span>
+        </div>
+    </div>
+
+    <!-- Errors -->
+    <div class="section" id="errors">
+        <h2 class="section-title">Error Codes</h2>
+        <p class="section-desc">All error responses return a JSON body with a <code>message</code> field, and optionally an <code>errors</code> object.</p>
+
+        <table class="errors-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Meaning</th>
+                    <th>Common Cause</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="status s-200">200</span></td>
+                    <td>OK</td>
+                    <td>Request succeeded.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-401">401</span></td>
+                    <td>Unauthorised</td>
+                    <td>Invalid credentials or expired / revoked token.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-403">403</span></td>
+                    <td>Forbidden</td>
+                    <td>Email not verified, account pending approval, or account rejected.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-422">422</span></td>
+                    <td>Unprocessable</td>
+                    <td>Validation failed. Check the <code>errors</code> object.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-500">500</span></td>
+                    <td>Server Error</td>
+                    <td>Unexpected server-side error.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-401">401</span> <code style="font-size:10px">mac_mismatch</code></td>
+                    <td>Device Mismatch</td>
+                    <td>The <code>X-Mac-Address</code> header does not match the address bound at login. Token is immediately revoked.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-401">401</span> <code style="font-size:10px">mac_unbound</code></td>
+                    <td>Unbound Token</td>
+                    <td>Token has no MAC binding. Token is revoked. Log in again.</td>
+                </tr>
+                <tr>
+                    <td><span class="status s-422">422</span> <code style="font-size:10px">mac_missing</code></td>
+                    <td>MAC Missing</td>
+                    <td><code>X-Mac-Address</code> header was not sent with a protected request.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div class="section" id="login">
+        <h2 class="section-title">Login</h2>
+        <p class="section-desc">Authenticates a user and returns an OAuth2 access token and refresh token.</p>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method method-POST">POST</span>
+                <span class="endpoint-path">/api/auth/login</span>
+                <span class="endpoint-summary">No auth required</span>
+            </div>
+            <div class="endpoint-body">
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(this,'login','request')">Request</button>
+                    <button class="tab"        onclick="switchTab(this,'login','response')">Response</button>
+                </div>
+
+                <div id="login-request" class="tab-panel active">
+                    <table class="fields-table">
+                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="field-name">email</span><span class="required">*</span></td>
+                                <td><span class="field-type">string</span></td>
+                                <td>Registered email address.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="field-name">password</span><span class="required">*</span></td>
+                                <td><span class="field-type">string</span></td>
+                                <td>Account password.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="field-name">mac_address</span><span class="required">*</span></td>
+                                <td><span class="field-type">string</span></td>
+                                <td>Hardware MAC address of the machine. Accepted formats: <code>AA:BB:CC:DD:EE:FF</code>, <code>AA-BB-CC-DD-EE-FF</code>, or <code>AABBCCDDEEFF</code>. The token is permanently bound to this address.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">Example Request</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+<pre><span class="m">POST</span> <span class="url">/api/auth/login</span>
+<span class="c">Content-Type</span>: <span class="s">application/json</span>
+<span class="c">Accept</span>: <span class="s">application/json</span>
+
+<span class="p">{</span>
+  <span class="c">"email"</span><span class="p">:</span>       <span class="s">"jane@example.com"</span><span class="p">,</span>
+  <span class="c">"password"</span><span class="p">:</span>    <span class="s">"your-password"</span><span class="p">,</span>
+  <span class="c">"mac_address"</span><span class="p">:</span> <span class="s">"AA:BB:CC:DD:EE:FF"</span>
+<span class="p">}</span></pre>
+                    </div>
+                </div>
+
+                <div id="login-response" class="tab-panel">
+                    <div class="response-tabs">
+                        <span class="response-tab ok active">200 OK</span>
+                        <span class="response-tab err" style="margin-left:4px">401 / 403</span>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">200 — Success</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+<pre><span class="p">{</span>
+  <span class="c">"token_type"</span><span class="p">:</span>    <span class="s">"Bearer"</span><span class="p">,</span>
+  <span class="c">"access_token"</span><span class="p">:</span>  <span class="s">"eyJ0eXAiOiJKV1..."</span><span class="p">,</span>
+  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200abc123..."</span><span class="p">,</span>
+  <span class="c">"expires_in"</span><span class="p">:</span>    <span class="n">31536000</span><span class="p">,</span>
+  <span class="c">"user"</span><span class="p">: {</span>
+    <span class="c">"id"</span><span class="p">:</span>    <span class="n">5</span><span class="p">,</span>
+    <span class="c">"name"</span><span class="p">:</span>  <span class="s">"Jane Smith"</span><span class="p">,</span>
+    <span class="c">"email"</span><span class="p">:</span> <span class="s">"jane@example.com"</span>
+  <span class="p">}</span>
+<span class="p">}</span></pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">403 — Not approved</span>
+                        </div>
+<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Your account is awaiting admin approval."</span> <span class="p">}</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── REFRESH ── -->
+    <div class="section" id="refresh">
+        <h2 class="section-title">Refresh Token</h2>
+        <p class="section-desc">Exchanges a valid refresh token for a new access token and refresh token pair. The old refresh token is invalidated.</p>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method method-POST">POST</span>
+                <span class="endpoint-path">/api/auth/refresh</span>
+                <span class="endpoint-summary">No auth required</span>
+            </div>
+            <div class="endpoint-body">
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(this,'refresh','request')">Request</button>
+                    <button class="tab"        onclick="switchTab(this,'refresh','response')">Response</button>
+                </div>
+
+                <div id="refresh-request" class="tab-panel active">
+                    <table class="fields-table">
+                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="field-name">refresh_token</span><span class="required">*</span></td>
+                                <td><span class="field-type">string</span></td>
+                                <td>The refresh token received from login or a previous refresh.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="field-name">mac_address</span><span class="required">*</span></td>
+                                <td><span class="field-type">string</span></td>
+                                <td>The MAC address of the device. Must match the value used at login. The new token will be bound to this address.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">Example Request</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+<pre><span class="m">POST</span> <span class="url">/api/auth/refresh</span>
+<span class="c">Content-Type</span>: <span class="s">application/json</span>
+<span class="c">Accept</span>: <span class="s">application/json</span>
+
+<span class="p">{</span>
+  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200abc123..."</span><span class="p">,</span>
+  <span class="c">"mac_address"</span><span class="p">:</span>   <span class="s">"AA:BB:CC:DD:EE:FF"</span>
+<span class="p">}</span></pre>
+                    </div>
+                </div>
+
+                <div id="refresh-response" class="tab-panel">
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">200 — Success</span>
+                        </div>
+<pre><span class="p">{</span>
+  <span class="c">"token_type"</span><span class="p">:</span>    <span class="s">"Bearer"</span><span class="p">,</span>
+  <span class="c">"access_token"</span><span class="p">:</span>  <span class="s">"eyJ0eXAiOiJKV1..."</span><span class="p">,</span>
+  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200xyz456..."</span><span class="p">,</span>
+  <span class="c">"expires_in"</span><span class="p">:</span>    <span class="n">31536000</span>
+<span class="p">}</span></pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">401 — Invalid / expired</span>
+                        </div>
+<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Invalid or expired refresh token."</span> <span class="p">}</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── LOGOUT ── -->
+    <div class="section" id="logout">
+        <h2 class="section-title">Logout</h2>
+        <p class="section-desc">Revokes the current access token and its paired refresh token. The token cannot be used after this call.</p>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method method-POST">POST</span>
+                <span class="endpoint-path">/api/auth/logout</span>
+                <span class="auth-pill">🔒 Requires Auth</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="callout callout-warning">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                    <span>Both the access token and paired refresh token are revoked. The user must call <strong>login</strong> again to obtain new tokens.</span>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-lang">Example Request</span>
+                        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    </div>
+<pre><span class="m">POST</span> <span class="url">/api/auth/logout</span>
+<span class="c">Authorization</span>: <span class="s">Bearer eyJ0eXAiOiJKV1...</span>
+<span class="c">Accept</span>: <span class="s">application/json</span></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-lang">200 — Success</span></div>
+<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Logged out successfully."</span> <span class="p">}</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ME ── -->
+    <div class="section" id="me">
+        <h2 class="section-title">Current User</h2>
+        <p class="section-desc">Returns the profile of the currently authenticated user.</p>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method method-GET">GET</span>
+                <span class="endpoint-path">/api/auth/me</span>
+                <span class="auth-pill">🔒 Requires Auth</span>
+            </div>
+            <div class="endpoint-body">
+
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-lang">Example Request</span>
+                        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    </div>
+<pre><span class="m">GET</span> <span class="url">/api/auth/me</span>
+<span class="c">Authorization</span>: <span class="s">Bearer eyJ0eXAiOiJKV1...</span>
+<span class="c">Accept</span>: <span class="s">application/json</span></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-lang">200 — Success</span></div>
+<pre><span class="p">{</span>
+  <span class="c">"id"</span><span class="p">:</span>     <span class="n">5</span><span class="p">,</span>
+  <span class="c">"name"</span><span class="p">:</span>   <span class="s">"Jane Smith"</span><span class="p">,</span>
+  <span class="c">"email"</span><span class="p">:</span>  <span class="s">"jane@example.com"</span><span class="p">,</span>
+  <span class="c">"status"</span><span class="p">:</span> <span class="s">"approved"</span>
+<span class="p">}</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    function switchTab(btn, section, panel) {
+        const parent = btn.closest('.endpoint-body');
+        parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(section + '-' + panel).classList.add('active');
+    }
+
+    function copyCode(btn) {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+    }
+
+    // Smooth scroll for sidebar links
+    document.querySelectorAll('nav a').forEach(a => {
+        a.addEventListener('click', e => {
+            const id = a.getAttribute('href').slice(1);
+            const el = document.getElementById(id);
+            if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+    });
+</script>
+
+</body>
+</html>
