@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage History — Intelligent Accelerators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ia-primary':      '#3F51B5',
+                        'ia-primary-dark': '#303F9F',
+                        'ia-accent':       '#06B6D4',
+                        'ia-bg-dark':      '#0F172A',
+                        'ia-text':         '#0F172A',
+                        'ia-success':      '#16A34A',
+                        'ia-warning':      '#D97706',
+                        'ia-error':        '#DC2626',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+
+        .content-scroll { overflow-y: auto; height: 100%; }
+        .content-scroll::-webkit-scrollbar { width: 5px; }
+        .content-scroll::-webkit-scrollbar-track { background: transparent; }
+        .content-scroll::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 99px; }
+
+        .nav-item { transition: all .15s; color: #64748B; }
+        .nav-item:hover  { background: #F1F5F9; color: #0F172A; }
+        .nav-item.active { background: #EEF0FB; color: #3F51B5; font-weight: 600; }
+        .nav-item.active svg { color: #3F51B5; }
+
+        tbody tr { transition: background .1s; }
+        tbody tr:hover { background: #F8FAFC; }
+
+        /* Status badge colours */
+        .badge-completed { background:#DCFCE7; color:#16A34A; }
+        .badge-failed    { background:#FEE2E2; color:#DC2626; }
+        .badge-running   { background:#FEF3C7; color:#D97706; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden select-none">
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+     ═══════════════════════════════════════════════════════════ -->
+<aside class="w-[220px] shrink-0 bg-white border-r border-slate-100 flex flex-col h-full z-10">
+    <div class="px-5 pt-5 pb-4 border-b border-slate-100">
+        <img src="../images/Logo-color-01.png" alt="IA" class="h-8 w-auto"
+             onerror="this.style.display='none';document.getElementById('sb-fb').style.display='flex'">
+        <div id="sb-fb" class="hidden items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-ia-primary flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                </svg>
+            </div>
+            <div class="leading-tight">
+                <p class="text-ia-text text-xs font-semibold">Intelligent</p>
+                <p class="text-ia-primary text-[10px] font-medium">Accelerators</p>
+            </div>
+        </div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <a href="dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+            </svg>
+            Dashboard
+        </a>
+        <a href="accelerators.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+            Accelerators
+        </a>
+        <a href="search.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+            </svg>
+            Search
+        </a>
+        <a href="usage-history.html" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+            </svg>
+            Usage History
+        </a>
+        <div class="pt-3 pb-1 px-2">
+            <p class="text-slate-300 text-[10px] font-semibold uppercase tracking-widest">System</p>
+        </div>
+        <a href="settings.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Settings
+        </a>
+        <a href="about.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            About
+        </a>
+    </nav>
+    <div class="px-3 py-4 border-t border-slate-100">
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer">
+            <div class="w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold shrink-0">J</div>
+            <div class="min-w-0 flex-1">
+                <p class="text-ia-text text-xs font-medium truncate">Jane Smith</p>
+                <p class="text-slate-400 text-[10px] truncate">jane@example.com</p>
+            </div>
+            <a href="login.html" class="text-slate-300 hover:text-slate-500 transition shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+     ═══════════════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 h-full">
+
+    <!-- Top bar -->
+    <header class="h-14 shrink-0 bg-white border-b border-slate-100 flex items-center justify-between px-6 gap-4">
+        <div>
+            <h1 class="text-base font-semibold text-ia-text">Usage History</h1>
+            <p class="text-xs text-slate-400 leading-none mt-0.5">Track your accelerator runs and resource consumption.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Date range filter -->
+            <select id="dateRange" onchange="filterTable()"
+                    class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white
+                           text-slate-600 focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                           focus:border-ia-primary">
+                <option value="all">All time</option>
+                <option value="today">Today</option>
+                <option value="week">This week</option>
+                <option value="month" selected>This month</option>
+            </select>
+
+            <!-- Status filter -->
+            <select id="statusFilter" onchange="filterTable()"
+                    class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white
+                           text-slate-600 focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                           focus:border-ia-primary">
+                <option value="all">All statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="Failed">Failed</option>
+                <option value="Running">Running</option>
+            </select>
+
+            <!-- Export -->
+            <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200
+                           bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                </svg>
+                Export CSV
+            </button>
+
+            <!-- Bell -->
+            <button class="relative p-2 rounded-lg text-slate-400 hover:text-ia-primary hover:bg-ia-primary/8 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                </svg>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-ia-accent border-2 border-white"></span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold cursor-pointer">J</div>
+        </div>
+    </header>
+
+    <!-- Scrollable body -->
+    <div class="content-scroll flex-1 px-6 py-5 flex flex-col gap-5">
+
+        <!-- ── Row 1: Widgets ─────────────────────────────────── -->
+        <div class="grid grid-cols-4 gap-4 shrink-0">
+
+            <!-- Total Runs -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="flex items-start justify-between mb-4">
+                    <p class="text-xs font-medium text-slate-500">Total Runs</p>
+                    <div class="w-8 h-8 rounded-xl bg-ia-primary/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-ia-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-ia-text">147</p>
+                <div class="flex items-center gap-1 mt-1.5">
+                    <svg class="w-3 h-3 text-ia-success" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
+                    </svg>
+                    <p class="text-xs text-ia-success font-medium">+18% vs last month</p>
+                </div>
+            </div>
+
+            <!-- Fuel Indicator -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="flex items-start justify-between mb-3">
+                    <p class="text-xs font-medium text-slate-500">Fuel Indicator</p>
+                    <div class="w-8 h-8 rounded-xl bg-ia-warning/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-ia-warning" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs mb-1.5">
+                    <span class="text-ia-text font-bold text-xl">68%</span>
+                    <span class="text-slate-400 self-end mb-0.5">remaining</span>
+                </div>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-ia-warning to-amber-400" style="width:68%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1.5">680 / 1,000 credits used</p>
+            </div>
+
+            <!-- Days to Renew -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="flex items-start justify-between mb-4">
+                    <p class="text-xs font-medium text-slate-500">Days to Renew</p>
+                    <div class="w-8 h-8 rounded-xl bg-ia-success/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-ia-success" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-ia-text">14</p>
+                <p class="text-xs text-slate-400 mt-1.5">Renews on 22 Sep 2026</p>
+            </div>
+
+            <!-- Data Processed -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="flex items-start justify-between mb-4">
+                    <p class="text-xs font-medium text-slate-500">Data Processed</p>
+                    <div class="w-8 h-8 rounded-xl bg-ia-accent/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-ia-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 2.25c0 2.278-3.694 4.125-8.25 4.125S3.75 10.903 3.75 8.625m16.5 2.25c0 2.278-3.694 4.125-8.25 4.125S3.75 13.153 3.75 10.875"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-ia-text">4.2 <span class="text-base font-semibold text-slate-400">GB</span></p>
+                <p class="text-xs text-slate-400 mt-1.5">Across 147 runs this month</p>
+            </div>
+
+        </div>
+
+        <!-- ── Row 2: History Table ───────────────────────────── -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+
+            <!-- Table header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 shrink-0">
+                <div>
+                    <h2 class="text-sm font-semibold text-ia-text">Run History</h2>
+                    <p class="text-xs text-slate-400 mt-0.5" id="rowCount">Showing 10 of 147 runs</p>
+                </div>
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                    </svg>
+                    <input id="searchInput" oninput="filterTable()" type="search"
+                           placeholder="Search runs…"
+                           class="pl-8 pr-4 py-1.5 text-xs rounded-lg border border-slate-200
+                                  bg-slate-50 focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                  focus:border-ia-primary w-44 transition">
+                </div>
+            </div>
+
+            <!-- Scrollable table -->
+            <div class="overflow-auto flex-1">
+                <table class="w-full text-sm min-w-[700px]">
+                    <thead class="sticky top-0 z-10">
+                        <tr class="bg-slate-50 border-b border-slate-100">
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide cursor-pointer hover:text-ia-primary"
+                                onclick="sortTable('name')">
+                                <span class="flex items-center gap-1">
+                                    Accelerator
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"/>
+                                    </svg>
+                                </span>
+                            </th>
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide cursor-pointer hover:text-ia-primary"
+                                onclick="sortTable('date')">
+                                <span class="flex items-center gap-1">
+                                    Run Date
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"/>
+                                    </svg>
+                                </span>
+                            </th>
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Input File</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Data Size</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Credits</th>
+                            <th class="px-5 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody" class="divide-y divide-slate-50">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+
+                <!-- Empty state -->
+                <div id="emptyState" class="hidden py-16 flex flex-col items-center justify-center text-center">
+                    <svg class="w-10 h-10 text-slate-200 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/>
+                    </svg>
+                    <p class="text-sm font-medium text-slate-400">No runs found</p>
+                    <p class="text-xs text-slate-300 mt-1">Try adjusting your filters</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="shrink-0 flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                <p class="text-xs text-slate-400" id="paginationInfo">Page 1 of 15</p>
+                <div class="flex items-center gap-1">
+                    <button onclick="changePage(-1)"
+                            class="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500
+                                   hover:bg-slate-50 transition disabled:opacity-40" id="prevPage">
+                        ← Prev
+                    </button>
+                    <div id="pageButtons" class="flex items-center gap-1"></div>
+                    <button onclick="changePage(1)"
+                            class="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500
+                                   hover:bg-slate-50 transition" id="nextPage">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Run Detail Modal
+     ═══════════════════════════════════════════════════════════ -->
+<div id="detailModal"
+     class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h3 class="text-sm font-semibold text-ia-text" id="modalTitle">Run Details</h3>
+            <button onclick="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="px-6 py-5 space-y-4" id="modalBody">
+            <!-- Populated by JS -->
+        </div>
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+            <button onclick="closeModal()"
+                    class="px-4 py-2 text-xs rounded-lg border border-slate-200 text-slate-600
+                           hover:bg-slate-50 transition font-medium">
+                Close
+            </button>
+            <button class="px-4 py-2 text-xs rounded-lg bg-ia-primary text-white font-medium
+                           hover:bg-ia-primary-dark transition">
+                Re-run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Sample data ───────────────────────────────────────────────
+    let allRuns = [
+        { id:'RUN-1047', name:'Zorvian Data Mapper',      date:'07 Sep 2026, 10:42 AM', file:'sales_Q3_2026.csv',       size:'18.4 MB', status:'Completed', credits:12,  duration:'2m 14s' },
+        { id:'RUN-1046', name:'Report Generator',         date:'07 Sep 2026, 09:15 AM', file:'monthly_summary.xlsx',   size:'5.2 MB',  status:'Completed', credits:28,  duration:'5m 03s' },
+        { id:'RUN-1045', name:'Data Transformer',         date:'06 Sep 2026, 04:58 PM', file:'raw_transactions.csv',   size:'42.1 MB', status:'Failed',    credits:0,   duration:'0m 42s' },
+        { id:'RUN-1044', name:'Insight Extractor',        date:'06 Sep 2026, 11:00 AM', file:'customer_data.xlsx',     size:'11.7 MB', status:'Running',   credits:0,   duration:'—'      },
+        { id:'RUN-1043', name:'Schema Mapper',            date:'06 Sep 2026, 02:30 PM', file:'product_catalog.csv',    size:'3.8 MB',  status:'Completed', credits:9,   duration:'1m 57s' },
+        { id:'RUN-1042', name:'Qeltron Trend Miner',      date:'05 Sep 2026, 03:10 PM', file:'timeseries_aug.csv',     size:'22.6 MB', status:'Completed', credits:15,  duration:'3m 22s' },
+        { id:'RUN-1041', name:'Nexify Score Builder',     date:'05 Sep 2026, 01:05 PM', file:'leads_pipeline.xlsx',    size:'8.9 MB',  status:'Completed', credits:20,  duration:'4m 01s' },
+        { id:'RUN-1040', name:'Calcivo Budget Balancer',  date:'04 Sep 2026, 11:45 AM', file:'budget_FY26.xlsx',       size:'2.4 MB',  status:'Completed', credits:7,   duration:'1m 12s' },
+        { id:'RUN-1039', name:'Lumeta Data Cleaner',      date:'04 Sep 2026, 09:30 AM', file:'crm_export_sep.csv',     size:'31.5 MB', status:'Completed', credits:18,  duration:'3m 48s' },
+        { id:'RUN-1038', name:'Daptrix Route Optimizer',  date:'03 Sep 2026, 04:00 PM', file:'delivery_routes_wk36.csv',size:'6.1 MB', status:'Failed',    credits:0,   duration:'0m 55s' },
+        { id:'RUN-1037', name:'Vintorix Segmentor',       date:'03 Sep 2026, 02:20 PM', file:'user_behaviour.csv',     size:'14.3 MB', status:'Completed', credits:11,  duration:'2m 33s' },
+        { id:'RUN-1036', name:'Pixlora Funnel Reader',    date:'02 Sep 2026, 11:10 AM', file:'funnel_data_aug.xlsx',   size:'4.7 MB',  status:'Completed', credits:8,   duration:'1m 44s' },
+        { id:'RUN-1035', name:'Zorvian Data Mapper',      date:'02 Sep 2026, 09:00 AM', file:'partners_master.csv',    size:'9.2 MB',  status:'Completed', credits:12,  duration:'2m 09s' },
+        { id:'RUN-1034', name:'Report Generator',         date:'01 Sep 2026, 03:30 PM', file:'weekly_kpis.xlsx',       size:'3.1 MB',  status:'Completed', credits:28,  duration:'5m 14s' },
+        { id:'RUN-1033', name:'Schema Mapper',            date:'01 Sep 2026, 10:00 AM', file:'inventory_sep.csv',      size:'7.6 MB',  status:'Completed', credits:9,   duration:'1m 51s' },
+    ]
+
+    let filtered   = [...allRuns]
+    let currentPage = 1
+    let pageSize    = 10
+    let sortKey     = 'date'
+    let sortAsc     = false
+
+    // ── Render table ──────────────────────────────────────────────
+    function renderTable() {
+        let body  = document.getElementById('historyBody')
+        let empty = document.getElementById('emptyState')
+        let start = (currentPage - 1) * pageSize
+        let rows  = filtered.slice(start, start + pageSize)
+
+        if (filtered.length === 0) {
+            body.innerHTML = ''
+            empty.classList.remove('hidden')
+            empty.classList.add('flex')
+        } else {
+            empty.classList.add('hidden')
+            empty.classList.remove('flex')
+            body.innerHTML = rows.map(r => `
+                <tr>
+                    <td class="px-5 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-ia-primary/10 flex items-center justify-center shrink-0">
+                                <svg class="w-3.5 h-3.5 text-ia-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-ia-text">${r.name}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">${r.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">${r.date}</td>
+                    <td class="px-5 py-3.5">
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                            </svg>
+                            <span class="text-xs text-ia-text truncate max-w-[160px]" title="${r.file}">${r.file}</span>
+                        </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">${r.size}</td>
+                    <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold
+                                     badge-${r.status.toLowerCase()}">
+                            <span class="w-1.5 h-1.5 rounded-full ${
+                                r.status==='Completed' ? 'bg-ia-success' :
+                                r.status==='Failed'    ? 'bg-ia-error'   : 'bg-ia-warning animate-pulse'
+                            }"></span>
+                            ${r.status}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3.5 text-xs text-slate-500 font-mono">${r.credits > 0 ? r.credits : '—'}</td>
+                    <td class="px-5 py-3.5 text-right">
+                        <button onclick="viewRun('${r.id}')"
+                                class="text-xs font-medium text-ia-primary hover:underline">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `).join('')
+        }
+
+        // Update counts
+        let total = filtered.length
+        let pages = Math.ceil(total / pageSize) || 1
+        document.getElementById('rowCount').textContent =
+            `Showing ${Math.min(start + 1, total)}–${Math.min(start + pageSize, total)} of ${total} runs`
+        document.getElementById('paginationInfo').textContent = `Page ${currentPage} of ${pages}`
+
+        // Page buttons
+        let btns = ''
+        for (let i = 1; i <= Math.min(pages, 5); i++) {
+            btns += `<button onclick="goPage(${i})"
+                             class="w-7 h-7 text-xs rounded-lg border transition font-medium
+                                    ${i === currentPage
+                                        ? 'bg-ia-primary text-white border-ia-primary'
+                                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'}">${i}</button>`
+        }
+        document.getElementById('pageButtons').innerHTML = btns
+        document.getElementById('prevPage').disabled = currentPage === 1
+        document.getElementById('nextPage').disabled = currentPage >= pages
+    }
+
+    // ── Filter ────────────────────────────────────────────────────
+    function filterTable() {
+        let query  = document.getElementById('searchInput').value.toLowerCase()
+        let status = document.getElementById('statusFilter').value
+
+        filtered = allRuns.filter(r => {
+            let matchQuery  = r.name.toLowerCase().includes(query) || r.file.toLowerCase().includes(query) || r.id.toLowerCase().includes(query)
+            let matchStatus = status === 'all' || r.status === status
+            return matchQuery && matchStatus
+        })
+
+        currentPage = 1
+        renderTable()
+    }
+
+    // ── Sort ──────────────────────────────────────────────────────
+    function sortTable(key) {
+        if (sortKey === key) sortAsc = !sortAsc
+        else { sortKey = key; sortAsc = true }
+        filtered.sort((a, b) => {
+            let va = key === 'name' ? a.name : a.date
+            let vb = key === 'name' ? b.name : b.date
+            return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va)
+        })
+        renderTable()
+    }
+
+    // ── Pagination ────────────────────────────────────────────────
+    function changePage(dir) {
+        let pages = Math.ceil(filtered.length / pageSize)
+        currentPage = Math.max(1, Math.min(currentPage + dir, pages))
+        renderTable()
+    }
+
+    function goPage(n) {
+        currentPage = n
+        renderTable()
+    }
+
+    // ── View modal ────────────────────────────────────────────────
+    function viewRun(id) {
+        let r = allRuns.find(x => x.id === id)
+        if (!r) return
+
+        document.getElementById('modalTitle').textContent = r.name + ' — ' + r.id
+        document.getElementById('modalBody').innerHTML = `
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Run ID</p>
+                    <p class="font-semibold text-ia-text font-mono">${r.id}</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Status</p>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold badge-${r.status.toLowerCase()}">
+                        <span class="w-1.5 h-1.5 rounded-full ${r.status==='Completed'?'bg-ia-success':r.status==='Failed'?'bg-ia-error':'bg-ia-warning'}"></span>
+                        ${r.status}
+                    </span>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Run Date</p>
+                    <p class="font-medium text-ia-text">${r.date}</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Duration</p>
+                    <p class="font-medium text-ia-text">${r.duration}</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Input File</p>
+                    <p class="font-medium text-ia-text truncate">${r.file}</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Data Size</p>
+                    <p class="font-medium text-ia-text">${r.size}</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p class="text-slate-400 mb-0.5">Credits Used</p>
+                    <p class="font-medium text-ia-text">${r.credits > 0 ? r.credits : '0 (run failed)'}</p>
+                </div>
+            </div>
+        `
+        document.getElementById('detailModal').classList.remove('hidden')
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.add('hidden')
+    }
+
+    // Close on backdrop click
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal()
+    })
+
+    // Init
+    renderTable()
+</script>
+
+</body>
+</html>

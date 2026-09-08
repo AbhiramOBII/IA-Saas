@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zorvian Data Mapper — Intelligent Accelerators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ia-primary':      '#3F51B5',
+                        'ia-primary-dark': '#303F9F',
+                        'ia-accent':       '#06B6D4',
+                        'ia-bg-dark':      '#0F172A',
+                        'ia-text':         '#0F172A',
+                        'ia-success':      '#16A34A',
+                        'ia-warning':      '#D97706',
+                        'ia-error':        '#DC2626',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+
+        .content-scroll { overflow-y: auto; height: 100%; }
+        .content-scroll::-webkit-scrollbar { width: 5px; }
+        .content-scroll::-webkit-scrollbar-track { background: transparent; }
+        .content-scroll::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 99px; }
+
+        .nav-item { transition: all .15s; color: #64748B; }
+        .nav-item:hover  { background: #F1F5F9; color: #0F172A; }
+        .nav-item.active { background: #EEF0FB; color: #3F51B5; font-weight: 600; }
+        .nav-item.active svg { color: #3F51B5; }
+
+        /* Stepper connector line */
+        .step-line { flex: 1; width: 2px; background: #E2E8F0; margin: 4px auto; }
+        .step-line.done { background: #3F51B5; }
+
+        /* Drop zone */
+        .drop-zone { transition: all .2s; }
+        .drop-zone.dragover { border-color: #3F51B5; background: #EEF0FB; }
+
+        /* Progress bar animation */
+        @keyframes progress { from { width: 0% } to { width: var(--target) } }
+        .progress-bar { animation: progress 2s ease-out forwards; }
+
+        @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
+        .ping { animation: ping 1.5s cubic-bezier(0,0,.2,1) infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden select-none">
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+     ═══════════════════════════════════════════════════════════ -->
+<aside class="w-[220px] shrink-0 bg-white border-r border-slate-100 flex flex-col h-full z-10">
+    <div class="px-5 pt-5 pb-4 border-b border-slate-100">
+        <img src="../images/Logo-color-01.png" alt="IA" class="h-8 w-auto"
+             onerror="this.style.display='none';document.getElementById('sb-fb').style.display='flex'">
+        <div id="sb-fb" class="hidden items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-ia-primary flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                </svg>
+            </div>
+            <div class="leading-tight">
+                <p class="text-ia-text text-xs font-semibold">Intelligent</p>
+                <p class="text-ia-primary text-[10px] font-medium">Accelerators</p>
+            </div>
+        </div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <a href="dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+            </svg>
+            Dashboard
+        </a>
+        <a href="accelerators.html" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+            Accelerators
+        </a>
+        <a href="search.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+            </svg>
+            Search
+        </a>
+        <a href="usage-history.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+            </svg>
+            Usage History
+        </a>
+        <div class="pt-3 pb-1 px-2">
+            <p class="text-slate-300 text-[10px] font-semibold uppercase tracking-widest">System</p>
+        </div>
+        <a href="settings.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Settings
+        </a>
+        <a href="about.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            About
+        </a>
+    </nav>
+    <div class="px-3 py-4 border-t border-slate-100">
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer">
+            <div class="w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold shrink-0">J</div>
+            <div class="min-w-0 flex-1">
+                <p class="text-ia-text text-xs font-medium truncate">Jane Smith</p>
+                <p class="text-slate-400 text-[10px] truncate">jane@example.com</p>
+            </div>
+            <a href="login.html" class="text-slate-300 hover:text-slate-500 transition shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+     ═══════════════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 h-full">
+
+    <!-- Top bar -->
+    <header class="h-12 shrink-0 bg-white border-b border-slate-100 flex items-center px-6 gap-3">
+        <a href="accelerators.html"
+           class="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-ia-primary transition">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+            </svg>
+            Back to Accelerators
+        </a>
+    </header>
+
+    <!-- Scrollable body -->
+    <div class="content-scroll flex-1 px-6 py-5 flex flex-col gap-4">
+
+        <!-- ── Accelerator Header Card ──────────────────────────── -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-5 flex items-start gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-ia-primary/10 flex items-center justify-center shrink-0">
+                <svg class="w-7 h-7 text-ia-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-ia-text mb-1.5">Zorvian Data Mapper</h1>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-ia-primary/10 text-ia-primary text-[11px] font-semibold">Analytics</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[11px] font-semibold">CSV</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[11px] font-semibold">Excel</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[11px] font-semibold">v2.1</span>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed max-w-xl">
+                    Map and align noisy data fields across sources with fuzzy matching and rules.
+                    Automatically resolves inconsistencies and produces a clean, unified output dataset.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Wizard Area ─────────────────────────────────────── -->
+        <div class="flex-1 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex min-h-0">
+
+            <!-- Left stepper -->
+            <div class="w-48 shrink-0 border-r border-slate-100 p-5 flex flex-col">
+
+                <!-- Step 1 -->
+                <div class="step-item flex items-start gap-3 cursor-pointer" onclick="goToStep(1)">
+                    <div class="flex flex-col items-center shrink-0">
+                        <div id="dot1" class="w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center
+                                    text-white text-xs font-bold z-10 transition-all">
+                            1
+                        </div>
+                        <div id="line1" class="step-line w-[2px] h-8 my-1 rounded-full"></div>
+                    </div>
+                    <div class="pt-1">
+                        <p id="steplabel1" class="text-xs font-semibold text-ia-text">Input</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Upload your data</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-item flex items-start gap-3 cursor-pointer" onclick="goToStep(2)">
+                    <div class="flex flex-col items-center shrink-0">
+                        <div id="dot2" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center
+                                    text-slate-500 text-xs font-bold z-10 transition-all">
+                            2
+                        </div>
+                        <div id="line2" class="step-line w-[2px] h-8 my-1 rounded-full"></div>
+                    </div>
+                    <div class="pt-1">
+                        <p id="steplabel2" class="text-xs font-medium text-slate-400">Configure</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Set parameters</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-item flex items-start gap-3 cursor-pointer" onclick="goToStep(3)">
+                    <div class="flex flex-col items-center shrink-0">
+                        <div id="dot3" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center
+                                    text-slate-500 text-xs font-bold z-10 transition-all">
+                            3
+                        </div>
+                        <div id="line3" class="step-line w-[2px] h-8 my-1 rounded-full"></div>
+                    </div>
+                    <div class="pt-1">
+                        <p id="steplabel3" class="text-xs font-medium text-slate-400">Run</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Execute accelerator</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-item flex items-start gap-3 cursor-pointer" onclick="goToStep(4)">
+                    <div class="flex flex-col items-center shrink-0">
+                        <div id="dot4" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center
+                                    text-slate-500 text-xs font-bold z-10 transition-all">
+                            4
+                        </div>
+                    </div>
+                    <div class="pt-1">
+                        <p id="steplabel4" class="text-xs font-medium text-slate-400">Results</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">View output</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right content panels -->
+            <div class="flex-1 flex flex-col min-w-0">
+
+                <!-- ─── STEP 1: Input ─────────────────────────── -->
+                <div id="panel1" class="flex-1 flex flex-col px-8 py-6">
+                    <h2 class="text-sm font-semibold text-ia-text mb-4">Input Data</h2>
+
+                    <!-- Drop zone -->
+                    <div id="dropZone"
+                         class="drop-zone border-2 border-dashed border-slate-200 rounded-2xl
+                                flex flex-col items-center justify-center gap-3 cursor-pointer
+                                hover:border-ia-primary hover:bg-ia-primary/3 transition"
+                         style="height: 260px;"
+                         onclick="document.getElementById('fileInput').click()"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+
+                        <!-- Upload icon -->
+                        <div id="dropDefault" class="flex flex-col items-center gap-2">
+                            <svg class="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775
+                                         5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-slate-500 text-center">Drag and drop your file here</p>
+                            <p class="text-xs text-slate-400 text-center">or</p>
+                            <span class="px-5 py-2 rounded-lg border border-slate-300 bg-white text-xs
+                                         font-semibold text-slate-600 hover:bg-slate-50 transition">
+                                Browse Files
+                            </span>
+                        </div>
+
+                        <!-- File selected state (hidden by default) -->
+                        <div id="dropSelected" class="hidden flex-col items-center gap-2">
+                            <div class="w-10 h-10 rounded-xl bg-ia-success/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-ia-success" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <p id="fileName" class="text-sm font-semibold text-ia-text"></p>
+                            <p id="fileSize" class="text-xs text-slate-400"></p>
+                            <button onclick="clearFile(event)"
+                                    class="text-xs text-ia-error hover:underline mt-1">Remove file</button>
+                        </div>
+
+                    </div>
+
+                    <input id="fileInput" type="file" accept=".csv,.xlsx,.xls,.json,.xml" class="hidden"
+                           onchange="handleFileSelect(event)">
+
+                    <p class="text-[11px] text-slate-400 text-center mt-3">
+                        Supported formats: CSV, XLSX, JSON, XML &nbsp;·&nbsp; Max file size: 500 MB
+                    </p>
+                </div>
+
+                <!-- ─── STEP 2: Configure ─────────────────────── -->
+                <div id="panel2" class="hidden flex-1 flex flex-col px-8 py-6">
+                    <h2 class="text-sm font-semibold text-ia-text mb-4">Configure Parameters</h2>
+
+                    <div class="grid grid-cols-2 gap-4 flex-1 content-start">
+
+                        <div>
+                            <label class="block text-xs font-medium text-ia-text mb-1.5">Matching Strategy</label>
+                            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-ia-text
+                                          bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                          focus:border-ia-primary">
+                                <option>Fuzzy Match (Recommended)</option>
+                                <option>Exact Match</option>
+                                <option>Phonetic Match</option>
+                                <option>Regex Match</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-ia-text mb-1.5">Match Threshold (%)</label>
+                            <input type="number" value="80" min="50" max="100"
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-ia-text
+                                          bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                          focus:border-ia-primary">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-ia-text mb-1.5">Output Format</label>
+                            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-ia-text
+                                          bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                          focus:border-ia-primary">
+                                <option>CSV</option>
+                                <option>Excel (.xlsx)</option>
+                                <option>JSON</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-ia-text mb-1.5">Delimiter (CSV)</label>
+                            <select class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-ia-text
+                                          bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                          focus:border-ia-primary">
+                                <option>Comma (,)</option>
+                                <option>Semicolon (;)</option>
+                                <option>Tab (\t)</option>
+                                <option>Pipe (|)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-ia-text mb-1.5">Target Field Mappings</label>
+                            <textarea rows="3" placeholder="e.g. customer_name → name, cust_id → id"
+                                      class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-ia-text
+                                             bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                             focus:border-ia-primary resize-none font-mono leading-relaxed"></textarea>
+                        </div>
+
+                        <div class="col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <input id="skipErrors" type="checkbox" checked
+                                   class="w-4 h-4 rounded border-slate-300 accent-ia-primary cursor-pointer">
+                            <div>
+                                <label for="skipErrors" class="text-xs font-medium text-ia-text cursor-pointer">
+                                    Skip unmatched rows
+                                </label>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Rows with no matching fields will be excluded from output</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ─── STEP 3: Run ───────────────────────────── -->
+                <div id="panel3" class="hidden flex-1 flex flex-col px-8 py-6">
+                    <h2 class="text-sm font-semibold text-ia-text mb-1">Run Accelerator</h2>
+                    <p class="text-xs text-slate-400 mb-6">Review your configuration and start the execution.</p>
+
+                    <!-- Summary -->
+                    <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 mb-5 grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <p class="text-slate-400 mb-0.5">File</p>
+                            <p class="font-medium text-ia-text" id="summaryFile">sales_data.csv</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-0.5">Strategy</p>
+                            <p class="font-medium text-ia-text">Fuzzy Match</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-0.5">Threshold</p>
+                            <p class="font-medium text-ia-text">80%</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-0.5">Output</p>
+                            <p class="font-medium text-ia-text">CSV</p>
+                        </div>
+                    </div>
+
+                    <!-- Idle state -->
+                    <div id="runIdle" class="flex flex-col items-center justify-center flex-1 gap-3">
+                        <div class="w-16 h-16 rounded-2xl bg-ia-primary/8 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-ia-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-medium text-ia-text">Ready to execute</p>
+                        <p class="text-xs text-slate-400 text-center max-w-xs">
+                            Click Run to start processing your file. Estimated time: ~2 minutes.
+                        </p>
+                        <button onclick="startRun()"
+                                class="mt-2 px-6 py-2.5 rounded-xl bg-ia-primary hover:bg-ia-primary-dark
+                                       text-white text-sm font-semibold transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+                            </svg>
+                            Run Now
+                        </button>
+                    </div>
+
+                    <!-- Running state -->
+                    <div id="runProgress" class="hidden flex-col gap-3 flex-1">
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="font-medium text-ia-text flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-ia-accent inline-block">
+                                    <span class="ping w-2 h-2 rounded-full bg-ia-accent opacity-75 inline-block"></span>
+                                </span>
+                                Processing…
+                            </span>
+                            <span id="progressPct" class="text-slate-500 font-mono">0%</span>
+                        </div>
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="progressBar"
+                                 class="h-full rounded-full bg-gradient-to-r from-ia-primary to-ia-accent transition-all duration-500"
+                                 style="width:0%"></div>
+                        </div>
+                        <div id="runLog"
+                             class="flex-1 bg-slate-900 rounded-xl p-3 font-mono text-[11px]
+                                    text-slate-300 overflow-y-auto leading-relaxed min-h-[120px]">
+                            <p class="text-ia-accent">&gt; Starting Zorvian Data Mapper v2.1…</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── STEP 4: Results ───────────────────────── -->
+                <div id="panel4" class="hidden flex-1 flex flex-col px-8 py-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-semibold text-ia-text">Results</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Run completed successfully · 2m 14s</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200
+                                           text-xs font-medium text-slate-600 hover:bg-slate-50 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                </svg>
+                                Download Output
+                            </button>
+                            <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ia-primary
+                                           text-white text-xs font-medium hover:bg-ia-primary-dark transition"
+                                    onclick="goToStep(1)">
+                                Run Again
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats row -->
+                    <div class="grid grid-cols-4 gap-3 mb-4">
+                        <div class="bg-ia-success/8 border border-ia-success/20 rounded-xl p-3 text-center">
+                            <p class="text-2xl font-bold text-ia-success">4,821</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Rows matched</p>
+                        </div>
+                        <div class="bg-ia-warning/8 border border-ia-warning/20 rounded-xl p-3 text-center">
+                            <p class="text-2xl font-bold text-ia-warning">132</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Rows skipped</p>
+                        </div>
+                        <div class="bg-ia-error/8 border border-ia-error/20 rounded-xl p-3 text-center">
+                            <p class="text-2xl font-bold text-ia-error">14</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Errors</p>
+                        </div>
+                        <div class="bg-ia-primary/8 border border-ia-primary/20 rounded-xl p-3 text-center">
+                            <p class="text-2xl font-bold text-ia-primary">96.7%</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Match rate</p>
+                        </div>
+                    </div>
+
+                    <!-- Preview table -->
+                    <div class="flex-1 border border-slate-100 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                            Output Preview (first 5 rows)
+                        </div>
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-100">
+                                    <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">id</th>
+                                    <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">name</th>
+                                    <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">region</th>
+                                    <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">value</th>
+                                    <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr><td class="px-4 py-2 text-slate-600">1001</td><td class="px-4 py-2 text-ia-text font-medium">Acme Corp</td><td class="px-4 py-2 text-slate-500">APAC</td><td class="px-4 py-2 text-slate-500">84,200</td><td class="px-4 py-2"><span class="text-ia-success font-medium">98%</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-600">1002</td><td class="px-4 py-2 text-ia-text font-medium">Globe Retail</td><td class="px-4 py-2 text-slate-500">EMEA</td><td class="px-4 py-2 text-slate-500">52,100</td><td class="px-4 py-2"><span class="text-ia-success font-medium">95%</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-600">1003</td><td class="px-4 py-2 text-ia-text font-medium">BlueWave Inc</td><td class="px-4 py-2 text-slate-500">NA</td><td class="px-4 py-2 text-slate-500">121,500</td><td class="px-4 py-2"><span class="text-ia-warning font-medium">82%</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-600">1004</td><td class="px-4 py-2 text-ia-text font-medium">Nexus Partners</td><td class="px-4 py-2 text-slate-500">APAC</td><td class="px-4 py-2 text-slate-500">37,800</td><td class="px-4 py-2"><span class="text-ia-success font-medium">99%</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-600">1005</td><td class="px-4 py-2 text-ia-text font-medium">Sigma Solutions</td><td class="px-4 py-2 text-slate-500">EMEA</td><td class="px-4 py-2 text-slate-500">68,400</td><td class="px-4 py-2"><span class="text-ia-success font-medium">97%</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Navigation footer -->
+                <div class="shrink-0 flex items-center justify-between px-8 py-4 border-t border-slate-100">
+                    <button id="prevBtn" onclick="prevStep()"
+                            class="hidden px-5 py-2 rounded-xl border border-slate-200 text-xs font-semibold
+                                   text-slate-600 hover:bg-slate-50 transition">
+                        Back
+                    </button>
+                    <div class="flex-1"></div>
+                    <button id="nextBtn" onclick="nextStep()"
+                            class="px-6 py-2 rounded-xl bg-slate-700 hover:bg-slate-900 text-white
+                                   text-xs font-semibold transition disabled:opacity-50">
+                        Next
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let currentStep = 1
+    let selectedFile = null
+
+    // ── Step navigation ───────────────────────────────────────────
+    function goToStep(n) {
+        if (n < 1 || n > 4) return
+        currentStep = n
+        renderStep()
+    }
+
+    function nextStep() {
+        if (currentStep === 3) {
+            // Must use Run button on step 3
+            return
+        }
+        if (currentStep < 4) goToStep(currentStep + 1)
+    }
+
+    function prevStep() {
+        if (currentStep > 1) goToStep(currentStep - 1)
+    }
+
+    function renderStep() {
+        for (let i = 1; i <= 4; i++) {
+            let dot   = document.getElementById('dot' + i)
+            let label = document.getElementById('steplabel' + i)
+            let panel = document.getElementById('panel' + i)
+
+            // Panel visibility
+            panel.classList.toggle('hidden', i !== currentStep)
+            panel.classList.toggle('flex',   i === currentStep)
+
+            // Dot styling
+            if (i < currentStep) {
+                // Done
+                dot.className = 'w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold z-10 transition-all'
+                dot.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`
+            } else if (i === currentStep) {
+                // Active
+                dot.className = 'w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold z-10 transition-all'
+                dot.innerHTML = i
+                label.className = 'text-xs font-semibold text-ia-text'
+            } else {
+                // Pending
+                dot.className = 'w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold z-10 transition-all'
+                dot.innerHTML = i
+                label.className = 'text-xs font-medium text-slate-400'
+            }
+
+            // Connector line colour (step 1-3 have lines)
+            if (i < 4) {
+                let line = document.getElementById('line' + i)
+                if (line) line.className = i < currentStep
+                    ? 'w-[2px] h-8 my-1 rounded-full bg-ia-primary'
+                    : 'w-[2px] h-8 my-1 rounded-full bg-slate-200'
+            }
+        }
+
+        // Prev/Next buttons
+        let prevBtn = document.getElementById('prevBtn')
+        let nextBtn = document.getElementById('nextBtn')
+
+        prevBtn.classList.toggle('hidden', currentStep === 1)
+        nextBtn.classList.toggle('hidden', currentStep === 3 || currentStep === 4)
+
+        if (currentStep === 2) nextBtn.textContent = 'Continue'
+        else nextBtn.textContent = 'Next'
+    }
+
+    // ── File handling ─────────────────────────────────────────────
+    function handleFileSelect(e) {
+        let f = e.target.files[0]
+        if (f) setFile(f)
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault()
+        document.getElementById('dropZone').classList.add('dragover')
+    }
+
+    function handleDragLeave(e) {
+        document.getElementById('dropZone').classList.remove('dragover')
+    }
+
+    function handleDrop(e) {
+        e.preventDefault()
+        document.getElementById('dropZone').classList.remove('dragover')
+        let f = e.dataTransfer.files[0]
+        if (f) setFile(f)
+    }
+
+    function setFile(f) {
+        selectedFile = f
+        document.getElementById('dropDefault').classList.add('hidden')
+        document.getElementById('dropSelected').classList.remove('hidden')
+        document.getElementById('dropSelected').classList.add('flex')
+        document.getElementById('fileName').textContent = f.name
+        document.getElementById('fileSize').textContent = formatBytes(f.size)
+        document.getElementById('summaryFile').textContent = f.name
+    }
+
+    function clearFile(e) {
+        e.stopPropagation()
+        selectedFile = null
+        document.getElementById('dropDefault').classList.remove('hidden')
+        document.getElementById('dropSelected').classList.add('hidden')
+        document.getElementById('dropSelected').classList.remove('flex')
+        document.getElementById('fileInput').value = ''
+    }
+
+    function formatBytes(b) {
+        if (b < 1024) return b + ' B'
+        if (b < 1048576) return (b/1024).toFixed(1) + ' KB'
+        return (b/1048576).toFixed(1) + ' MB'
+    }
+
+    // ── Run simulation ────────────────────────────────────────────
+    function startRun() {
+        document.getElementById('runIdle').classList.add('hidden')
+        document.getElementById('runProgress').classList.remove('hidden')
+        document.getElementById('runProgress').classList.add('flex')
+
+        let pct  = 0
+        let log  = document.getElementById('runLog')
+        let bar  = document.getElementById('progressBar')
+        let pctEl= document.getElementById('progressPct')
+
+        let messages = [
+            'Loading input file…',
+            'Parsing columns…',
+            'Running fuzzy match engine…',
+            'Resolving field mappings…',
+            'Writing output file…',
+            'Finalising results…',
+        ]
+
+        let i = 0
+        let interval = setInterval(() => {
+            pct = Math.min(pct + Math.random() * 18, 100)
+            bar.style.width = pct.toFixed(0) + '%'
+            pctEl.textContent = pct.toFixed(0) + '%'
+
+            if (i < messages.length) {
+                log.innerHTML += `<p class="text-slate-300">&gt; ${messages[i]}</p>`
+                log.scrollTop = log.scrollHeight
+                i++
+            }
+
+            if (pct >= 100) {
+                clearInterval(interval)
+                bar.style.width = '100%'
+                pctEl.textContent = '100%'
+                log.innerHTML += `<p class="text-ia-success font-semibold">&gt; Completed successfully in 2m 14s.</p>`
+                log.scrollTop = log.scrollHeight
+
+                setTimeout(() => goToStep(4), 800)
+            }
+        }, 500)
+    }
+
+    // Init
+    renderStep()
+</script>
+
+</body>
+</html>

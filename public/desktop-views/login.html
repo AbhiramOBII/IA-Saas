@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — Intelligent Accelerators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ia-primary':      '#3F51B5',
+                        'ia-primary-dark': '#303F9F',
+                        'ia-accent':       '#06B6D4',
+                        'ia-bg-dark':      '#0F172A',
+                        'ia-text':         '#0F172A',
+                        'ia-error':        '#DC2626',
+                        'ia-success':      '#16A34A',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth eye-icon transition */
+        .eye-btn svg { transition: opacity .15s; }
+
+        /* Custom checkbox */
+        input[type="checkbox"]:checked {
+            background-color: #3F51B5;
+            border-color: #3F51B5;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex bg-white select-none overflow-hidden">
+
+<!-- ═══════════════════════════════════════════════════
+     LEFT PANEL — Brand
+     ═══════════════════════════════════════════════════ -->
+<div class="hidden lg:flex lg:w-[52%] relative overflow-hidden flex-col
+            bg-gradient-to-br from-ia-bg-dark via-[#1a2570] to-ia-primary-dark">
+
+    <!-- Ambient glow blobs -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full
+                    bg-ia-accent/20 blur-[120px]"></div>
+        <div class="absolute bottom-0 -left-24 w-[400px] h-[400px] rounded-full
+                    bg-ia-primary/50 blur-[100px]"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                    w-[260px] h-[260px] rounded-full bg-ia-accent/10 blur-[80px]"></div>
+    </div>
+
+    <!-- Dot-grid texture -->
+    <div class="absolute inset-0 opacity-[0.04]"
+         style="background-image:radial-gradient(circle,#ffffff 1px,transparent 1px);
+                background-size:24px 24px;"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 flex flex-col h-full p-10 xl:p-14">
+
+        <!-- Logo -->
+        <div>
+            <img src="../images/Logo-white.png" alt="Intelligent Accelerators"
+                 class="h-9 w-auto"
+                 onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
+            <div id="logo-fallback" class="hidden items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-ia-accent flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                    </svg>
+                </div>
+                <span class="text-white font-semibold text-sm leading-tight">
+                    Intelligent<br><span class="text-ia-accent text-xs font-medium">Accelerators</span>
+                </span>
+            </div>
+        </div>
+
+        <hr class="border-white/10 my-5">
+
+        <!-- Headline -->
+        <div class="mt-auto mb-2">
+            <h2 class="text-3xl xl:text-4xl font-bold text-white leading-tight mb-4">
+                Bring Intelligence to<br>
+                <span class="text-ia-accent">Every Data Workflow</span>
+            </h2>
+            <p class="text-white/55 text-sm leading-relaxed max-w-xs mb-8">
+                Access purpose-built intelligent accelerators that help you process,
+                analyse and transform enterprise data faster — securely from your desktop.
+            </p>
+
+            <!-- Feature bullets -->
+            <ul class="space-y-3">
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-ia-accent shrink-0"></span>
+                    <span class="text-white/70 text-sm">Intelligent, task-specific accelerators</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-ia-accent shrink-0"></span>
+                    <span class="text-white/70 text-sm">Secure local data processing</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-ia-accent shrink-0"></span>
+                    <span class="text-white/70 text-sm">Centrally managed. Locally executed.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Sign-up prompt -->
+        <p class="mt-8 text-white/40 text-xs">
+            Don't have an account?
+            <a href="register.html"
+               class="text-ia-accent hover:text-ia-accent/80 font-medium underline underline-offset-2 transition">
+                Sign up here
+            </a>
+        </p>
+
+        <!-- Footer -->
+        <div class="mt-4 flex items-center justify-between gap-4">
+            <p class="text-white/25 text-xs">
+                &copy; 2026
+                <a href="https://emergentconsultinginc.com/" target="_blank"
+                   class="hover:text-white/50 transition underline underline-offset-2">
+                    Emergent Consulting Inc.
+                </a>
+                All rights reserved.
+            </p>
+            <span class="text-white/25 text-[11px] font-mono shrink-0">v1.0.0</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     RIGHT PANEL — Login Form
+     ═══════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col items-center justify-center min-h-screen
+            overflow-y-auto py-10 px-6 lg:px-12 relative"
+     style="background-image:radial-gradient(circle,#e2e8f0 1px,transparent 1px);
+            background-size:20px 20px; background-color:#f8fafc;">
+
+    <!-- Mobile logo -->
+    <div class="mb-8 lg:hidden flex items-center gap-2">
+        <img src="../images/Logo-white.png" alt="Intelligent Accelerators"
+             class="h-8 w-auto"
+             onerror="this.style.display='none'">
+    </div>
+
+    <!-- Form card -->
+    <div class="w-full max-w-sm">
+
+        <!-- Heading -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-ia-text">Welcome back</h2>
+            <p class="text-sm text-slate-500 mt-1">Sign in to your account to continue</p>
+        </div>
+
+        <!-- Form -->
+        <form id="loginForm" onsubmit="handleSubmit(event)" novalidate>
+
+            <!-- Email -->
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-ia-text mb-1.5">
+                    Email Address
+                </label>
+                <input
+                    id="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    class="w-full px-4 py-2.5 rounded-lg border text-sm text-ia-text bg-white
+                           border-slate-300 placeholder-slate-400
+                           focus:outline-none focus:ring-2 focus:ring-ia-primary/40 focus:border-ia-primary
+                           transition"
+                >
+                <p id="emailError" class="mt-1.5 text-xs text-ia-error hidden">Please enter a valid email address.</p>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-2">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="password" class="block text-sm font-medium text-ia-text">
+                        Password
+                    </label>
+                    <a href="forgot-password.html"
+                       class="text-xs text-ia-primary hover:underline font-medium">
+                        Forgot password?
+                    </a>
+                </div>
+                <div class="relative">
+                    <input
+                        id="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="Enter your password"
+                        class="w-full px-4 py-2.5 pr-10 rounded-lg border text-sm text-ia-text bg-white
+                               border-slate-300 placeholder-slate-400
+                               focus:outline-none focus:ring-2 focus:ring-ia-primary/40 focus:border-ia-primary
+                               transition"
+                    >
+                    <!-- Eye toggle -->
+                    <button type="button" id="eyeBtn"
+                            onclick="togglePassword()"
+                            class="eye-btn absolute inset-y-0 right-3 flex items-center
+                                   text-slate-400 hover:text-slate-600 transition"
+                            tabindex="-1">
+                        <!-- Eye open -->
+                        <svg id="eyeOpen" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5
+                                     c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639
+                                     C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <!-- Eye closed -->
+                        <svg id="eyeClosed" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5
+                                     c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5
+                                     c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774
+                                     M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21
+                                     m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                        </svg>
+                    </button>
+                </div>
+                <p id="passwordError" class="mt-1.5 text-xs text-ia-error hidden">Password is required.</p>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="flex items-center gap-2.5 mb-6 mt-4">
+                <input
+                    id="remember"
+                    type="checkbox"
+                    class="w-4 h-4 rounded border-slate-300 text-ia-primary
+                           focus:ring-ia-primary/40 cursor-pointer shrink-0 accent-ia-primary"
+                >
+                <label for="remember" class="text-sm text-slate-600 cursor-pointer select-none">
+                    Remember me on this device
+                </label>
+            </div>
+
+            <!-- Error alert (API errors) -->
+            <div id="apiError"
+                 class="hidden flex items-start gap-2 bg-red-50 border border-red-200
+                        text-ia-error text-sm px-4 py-3 rounded-lg mb-4">
+                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                     stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71
+                             c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898
+                             0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                </svg>
+                <span id="apiErrorMsg">Invalid email or password.</span>
+            </div>
+
+            <!-- Sign In button -->
+            <button
+                type="submit"
+                id="submitBtn"
+                class="w-full py-2.5 px-4 rounded-lg bg-ia-primary hover:bg-ia-primary-dark
+                       text-white text-sm font-semibold tracking-wide transition
+                       focus:outline-none focus:ring-2 focus:ring-ia-primary/50 focus:ring-offset-2
+                       disabled:opacity-60 disabled:cursor-not-allowed
+                       flex items-center justify-center gap-2"
+            >
+                <!-- Default state -->
+                <span id="btnLabel">Sign In</span>
+                <!-- Loading state -->
+                <svg id="btnSpinner" class="hidden animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                            stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+            </button>
+
+        </form>
+
+        <!-- Bottom note -->
+        <p class="mt-6 text-center text-xs text-slate-400 leading-relaxed">
+            Access is managed by your organisation.<br>
+            Contact your admin if you can't sign in.
+        </p>
+
+    </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     JavaScript
+     ═══════════════════════════════════════════════════ -->
+<script>
+    // ── Password toggle ───────────────────────────────────────────
+    function togglePassword() {
+        let input  = document.getElementById('password')
+        let open   = document.getElementById('eyeOpen')
+        let closed = document.getElementById('eyeClosed')
+        let isPass = input.type === 'password'
+
+        input.type    = isPass ? 'text'   : 'password'
+        open.classList.toggle('hidden',  isPass)
+        closed.classList.toggle('hidden', !isPass)
+    }
+
+    // ── Form validation + submit ──────────────────────────────────
+    function handleSubmit(e) {
+        e.preventDefault()
+
+        let email     = document.getElementById('email')
+        let password  = document.getElementById('password')
+        let emailErr  = document.getElementById('emailError')
+        let passErr   = document.getElementById('passwordError')
+        let apiErr    = document.getElementById('apiError')
+        let valid     = true
+
+        // Reset errors
+        emailErr.classList.add('hidden')
+        passErr.classList.add('hidden')
+        apiErr.classList.add('hidden')
+        email.classList.remove('border-ia-error')
+        password.classList.remove('border-ia-error')
+
+        // Validate email
+        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
+            emailErr.classList.remove('hidden')
+            email.classList.add('border-red-400', 'focus:ring-red-300', 'focus:border-red-400')
+            valid = false
+        }
+
+        // Validate password
+        if (!password.value) {
+            passErr.classList.remove('hidden')
+            password.classList.add('border-red-400', 'focus:ring-red-300', 'focus:border-red-400')
+            valid = false
+        }
+
+        if (!valid) return
+
+        // Show loading
+        setLoading(true)
+
+        // ── Replace this with your actual API call ────────────────
+        // Example:
+        // fetch('/api/auth/login', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        //     body: JSON.stringify({
+        //         email:       email.value.trim(),
+        //         password:    password.value,
+        //         mac_address: getMacAddress(),   // from Electron ipcRenderer
+        //     })
+        // })
+        // .then(r => r.json())
+        // .then(data => {
+        //     if (data.access_token) {
+        //         localStorage.setItem('access_token',  data.access_token)
+        //         localStorage.setItem('refresh_token', data.refresh_token)
+        //         if (document.getElementById('remember').checked) {
+        //             localStorage.setItem('remember_email', email.value.trim())
+        //         }
+        //         window.location.href = 'dashboard.html'
+        //     } else {
+        //         showApiError(data.message || 'Sign in failed. Please try again.')
+        //     }
+        // })
+        // .catch(() => showApiError('Network error. Check your connection.'))
+        // .finally(() => setLoading(false))
+        // ─────────────────────────────────────────────────────────
+
+        // Demo: simulate a network call
+        setTimeout(() => {
+            setLoading(false)
+            showApiError('API not connected yet — replace the fetch() call above.')
+        }, 1500)
+    }
+
+    function setLoading(on) {
+        let btn     = document.getElementById('submitBtn')
+        let label   = document.getElementById('btnLabel')
+        let spinner = document.getElementById('btnSpinner')
+
+        btn.disabled = on
+        label.textContent = on ? 'Signing in…' : 'Sign In'
+        spinner.classList.toggle('hidden', !on)
+    }
+
+    function showApiError(msg) {
+        let el = document.getElementById('apiError')
+        document.getElementById('apiErrorMsg').textContent = msg
+        el.classList.remove('hidden')
+    }
+
+    // ── Pre-fill remembered email ─────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+        let saved = localStorage.getItem('remember_email')
+        if (saved) {
+            document.getElementById('email').value = saved
+            document.getElementById('remember').checked = true
+        }
+    })
+</script>
+
+</body>
+</html>

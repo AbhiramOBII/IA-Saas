@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Intelligent Accelerators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ia-primary':      '#3F51B5',
+                        'ia-primary-dark': '#303F9F',
+                        'ia-accent':       '#06B6D4',
+                        'ia-bg-dark':      '#0F172A',
+                        'ia-text':         '#0F172A',
+                        'ia-success':      '#16A34A',
+                        'ia-warning':      '#D97706',
+                        'ia-error':        '#DC2626',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+
+        .content-scroll { overflow-y: auto; height: 100%; }
+        .content-scroll::-webkit-scrollbar { width: 5px; }
+        .content-scroll::-webkit-scrollbar-track { background: transparent; }
+        .content-scroll::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 99px; }
+
+        .nav-item { transition: all .15s; color: #64748B; }
+        .nav-item:hover  { background: #F1F5F9; color: #0F172A; }
+        .nav-item.active { background: #EEF0FB; color: #3F51B5; font-weight: 600; }
+        .nav-item.active svg { color: #3F51B5; }
+
+        /* Settings nav tabs */
+        .stab { transition: all .15s; color: #64748B; border-left: 2px solid transparent; }
+        .stab:hover { color: #0F172A; background: #F8FAFC; }
+        .stab.active { color: #3F51B5; border-left-color: #3F51B5; background: #EEF0FB; font-weight: 600; }
+
+        /* Theme card */
+        .theme-card { transition: all .2s; cursor: pointer; }
+        .theme-card:hover { box-shadow: 0 0 0 2px #3F51B5; }
+        .theme-card.selected { box-shadow: 0 0 0 2px #3F51B5; }
+
+        /* Password strength */
+        .strength-bar { transition: width .4s, background .4s; }
+
+        /* Toast */
+        #toast { transition: transform .3s, opacity .3s; }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.hide { transform: translateY(20px); opacity: 0; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden select-none">
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+     ═══════════════════════════════════════════════════════════ -->
+<aside class="w-[220px] shrink-0 bg-white border-r border-slate-100 flex flex-col h-full z-10">
+    <div class="px-5 pt-5 pb-4 border-b border-slate-100">
+        <img src="../images/Logo-color-01.png" alt="IA" class="h-8 w-auto"
+             onerror="this.style.display='none';document.getElementById('sb-fb').style.display='flex'">
+        <div id="sb-fb" class="hidden items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-ia-primary flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                </svg>
+            </div>
+            <div class="leading-tight">
+                <p class="text-ia-text text-xs font-semibold">Intelligent</p>
+                <p class="text-ia-primary text-[10px] font-medium">Accelerators</p>
+            </div>
+        </div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <a href="dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+            </svg>
+            Dashboard
+        </a>
+        <a href="accelerators.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+            Accelerators
+        </a>
+        <a href="search.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+            </svg>
+            Search
+        </a>
+        <a href="usage-history.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+            </svg>
+            Usage History
+        </a>
+        <div class="pt-3 pb-1 px-2">
+            <p class="text-slate-300 text-[10px] font-semibold uppercase tracking-widest">System</p>
+        </div>
+        <a href="settings.html" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Settings
+        </a>
+        <a href="about.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            About
+        </a>
+    </nav>
+    <div class="px-3 py-4 border-t border-slate-100">
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer">
+            <div class="w-7 h-7 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold shrink-0">J</div>
+            <div class="min-w-0 flex-1">
+                <p class="text-ia-text text-xs font-medium truncate">Jane Smith</p>
+                <p class="text-slate-400 text-[10px] truncate">jane@example.com</p>
+            </div>
+            <a href="login.html" class="text-slate-300 hover:text-slate-500 transition shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+     ═══════════════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 h-full">
+
+    <!-- Top bar -->
+    <header class="h-14 shrink-0 bg-white border-b border-slate-100 flex items-center justify-between px-6">
+        <div>
+            <h1 class="text-base font-semibold text-ia-text">Settings</h1>
+            <p class="text-xs text-slate-400 leading-none mt-0.5">Manage your account and application preferences.</p>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-ia-primary flex items-center justify-center text-white text-xs font-bold cursor-pointer">J</div>
+    </header>
+
+    <!-- Body: left tabs + right panel -->
+    <div class="flex-1 flex min-h-0">
+
+        <!-- Settings left nav -->
+        <div class="w-52 shrink-0 border-r border-slate-100 bg-white py-4 px-3 flex flex-col gap-0.5">
+            <button onclick="showTab('security')" id="tab-security"
+                    class="stab active w-full flex items-center gap-3 px-3 py-2.5 rounded-r-xl text-sm text-left">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                </svg>
+                Security
+            </button>
+            <button onclick="showTab('appearance')" id="tab-appearance"
+                    class="stab w-full flex items-center gap-3 px-3 py-2.5 rounded-r-xl text-sm text-left">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/>
+                </svg>
+                Appearance
+            </button>
+
+        </div>
+
+        <!-- Settings right content -->
+        <div class="flex-1 content-scroll bg-slate-50">
+            <div class="max-w-2xl mx-auto px-8 py-8 space-y-6">
+
+                <!-- ─── SECURITY TAB ────────────────────────────── -->
+                <div id="panel-security">
+
+                    <!-- Section heading -->
+                    <div class="mb-5">
+                        <h2 class="text-sm font-semibold text-ia-text">Security</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Update your password and manage account security.</p>
+                    </div>
+
+                    <!-- Update Password card -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-5">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-9 h-9 rounded-xl bg-ia-primary/10 flex items-center justify-center shrink-0">
+                                <svg class="w-4.5 h-4.5 text-ia-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-ia-text">Update Password</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Choose a strong password with at least 8 characters.</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="savePassword(event)" novalidate class="space-y-4">
+
+                            <!-- Current password -->
+                            <div>
+                                <label class="block text-xs font-medium text-ia-text mb-1.5">Current Password</label>
+                                <div class="relative">
+                                    <input id="currentPwd" type="password" placeholder="Enter current password"
+                                           class="w-full px-4 py-2.5 pr-10 rounded-lg border border-slate-200 text-xs
+                                                  bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                                  focus:border-ia-primary transition">
+                                    <button type="button" onclick="togglePwd('currentPwd', this)"
+                                            class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 transition">
+                                        <svg class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="currentPwdError" class="hidden mt-1 text-xs text-ia-error">This field is required.</p>
+                            </div>
+
+                            <!-- New password -->
+                            <div>
+                                <label class="block text-xs font-medium text-ia-text mb-1.5">New Password</label>
+                                <div class="relative">
+                                    <input id="newPwd" type="password" placeholder="At least 8 characters"
+                                           oninput="checkStrength(this.value)"
+                                           class="w-full px-4 py-2.5 pr-10 rounded-lg border border-slate-200 text-xs
+                                                  bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                                  focus:border-ia-primary transition">
+                                    <button type="button" onclick="togglePwd('newPwd', this)"
+                                            class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 transition">
+                                        <svg class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Strength meter -->
+                                <div id="strengthMeter" class="hidden mt-2">
+                                    <div class="flex gap-1 mb-1">
+                                        <div class="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div id="s1" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
+                                        </div>
+                                        <div class="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div id="s2" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
+                                        </div>
+                                        <div class="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div id="s3" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
+                                        </div>
+                                        <div class="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div id="s4" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
+                                        </div>
+                                    </div>
+                                    <p id="strengthLabel" class="text-[10px] text-slate-400"></p>
+                                </div>
+                                <p id="newPwdError" class="hidden mt-1 text-xs text-ia-error">Minimum 8 characters required.</p>
+                            </div>
+
+                            <!-- Confirm password -->
+                            <div>
+                                <label class="block text-xs font-medium text-ia-text mb-1.5">Confirm New Password</label>
+                                <div class="relative">
+                                    <input id="confirmPwd" type="password" placeholder="Re-enter new password"
+                                           oninput="checkMatch()"
+                                           class="w-full px-4 py-2.5 pr-10 rounded-lg border border-slate-200 text-xs
+                                                  bg-white focus:outline-none focus:ring-2 focus:ring-ia-primary/30
+                                                  focus:border-ia-primary transition">
+                                    <button type="button" onclick="togglePwd('confirmPwd', this)"
+                                            class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 transition">
+                                        <svg class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="confirmPwdError" class="hidden mt-1 text-xs text-ia-error">Passwords do not match.</p>
+                                <p id="confirmPwdOk" class="hidden mt-1 text-xs text-ia-success flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                    </svg>
+                                    Passwords match
+                                </p>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1">
+                                <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">
+                                    Use 8+ characters with a mix of letters, numbers and symbols.
+                                </p>
+                                <button type="submit"
+                                        class="px-5 py-2 rounded-xl bg-ia-primary hover:bg-ia-primary-dark
+                                               text-white text-xs font-semibold transition shrink-0">
+                                    Update Password
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                    <!-- Two-factor hint -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-ia-accent/10 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4 text-ia-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3M6 7.5h.008v.008H6V7.5z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-ia-text">Two-Factor Authentication</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Add an extra layer of security to your account.</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
+                            Coming soon
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- ─── APPEARANCE TAB ──────────────────────────── -->
+                <div id="panel-appearance" class="hidden">
+
+                    <div class="mb-5">
+                        <h2 class="text-sm font-semibold text-ia-text">Appearance</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Choose how the application looks on your device.</p>
+                    </div>
+
+                    <!-- Theme selection -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-5">
+                        <h3 class="text-xs font-semibold text-ia-text mb-4">Theme</h3>
+
+                        <div class="grid grid-cols-3 gap-3">
+
+                            <!-- Light -->
+                            <div onclick="setTheme('light')" id="theme-light"
+                                 class="theme-card selected rounded-xl border-2 border-ia-primary overflow-hidden">
+                                <!-- Preview -->
+                                <div class="bg-white p-3 border-b border-slate-100">
+                                    <div class="flex gap-1.5 mb-2">
+                                        <div class="w-12 bg-slate-100 rounded h-8"></div>
+                                        <div class="flex-1 space-y-1.5">
+                                            <div class="h-2 bg-slate-100 rounded w-3/4"></div>
+                                            <div class="h-2 bg-slate-100 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                    <div class="h-1.5 bg-ia-primary/20 rounded w-full mb-1"></div>
+                                    <div class="h-1.5 bg-ia-primary/10 rounded w-5/6"></div>
+                                </div>
+                                <div class="px-3 py-2 flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-ia-text">Light</span>
+                                    <div id="check-light" class="w-4 h-4 rounded-full bg-ia-primary flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dark -->
+                            <div onclick="setTheme('dark')" id="theme-dark"
+                                 class="theme-card rounded-xl border-2 border-slate-200 overflow-hidden">
+                                <!-- Preview -->
+                                <div class="bg-slate-900 p-3 border-b border-slate-700">
+                                    <div class="flex gap-1.5 mb-2">
+                                        <div class="w-12 bg-slate-700 rounded h-8"></div>
+                                        <div class="flex-1 space-y-1.5">
+                                            <div class="h-2 bg-slate-700 rounded w-3/4"></div>
+                                            <div class="h-2 bg-slate-700 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                    <div class="h-1.5 bg-ia-primary/40 rounded w-full mb-1"></div>
+                                    <div class="h-1.5 bg-ia-primary/20 rounded w-5/6"></div>
+                                </div>
+                                <div class="bg-slate-800 px-3 py-2 flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-white">Dark</span>
+                                    <div id="check-dark" class="w-4 h-4 rounded-full border border-slate-500 hidden items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System -->
+                            <div onclick="setTheme('system')" id="theme-system"
+                                 class="theme-card rounded-xl border-2 border-slate-200 overflow-hidden">
+                                <!-- Preview: split -->
+                                <div class="flex border-b border-slate-100">
+                                    <div class="w-1/2 bg-white p-2">
+                                        <div class="h-2 bg-slate-100 rounded mb-1 w-full"></div>
+                                        <div class="h-2 bg-slate-100 rounded w-3/4"></div>
+                                    </div>
+                                    <div class="w-1/2 bg-slate-900 p-2">
+                                        <div class="h-2 bg-slate-700 rounded mb-1 w-full"></div>
+                                        <div class="h-2 bg-slate-700 rounded w-3/4"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-white px-3 py-2 flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-ia-text">System</span>
+                                    <div id="check-system" class="w-4 h-4 rounded-full border border-slate-200 hidden items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Theme applied note -->
+                        <p id="themeNote" class="mt-4 text-[11px] text-slate-400">
+                            Currently using <strong class="text-ia-text" id="themeActive">Light</strong> theme.
+                            Full dark mode applies on next launch.
+                        </p>
+                    </div>
+
+
+
+                </div>
+
+
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"
+     class="hide fixed bottom-6 right-6 z-50 flex items-center gap-3
+            bg-ia-text text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg">
+    <svg class="w-4 h-4 text-ia-success shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span id="toastMsg">Saved successfully.</span>
+</div>
+
+<script>
+    // ── Tab switching ─────────────────────────────────────────────
+    let tabs = ['security','appearance']
+
+    function showTab(id) {
+        tabs.forEach(t => {
+            document.getElementById('panel-' + t).classList.add('hidden')
+            document.getElementById('tab-' + t).classList.remove('active')
+        })
+        document.getElementById('panel-' + id).classList.remove('hidden')
+        document.getElementById('tab-' + id).classList.add('active')
+    }
+
+    // ── Password eye toggle ───────────────────────────────────────
+    function togglePwd(id, btn) {
+        let input = document.getElementById(id)
+        input.type = input.type === 'password' ? 'text' : 'password'
+    }
+
+    // ── Password strength ─────────────────────────────────────────
+    function checkStrength(val) {
+        let meter = document.getElementById('strengthMeter')
+        if (!val) { meter.classList.add('hidden'); return }
+        meter.classList.remove('hidden')
+
+        let score = 0
+        if (val.length >= 8)             score++
+        if (/[A-Z]/.test(val))           score++
+        if (/[0-9]/.test(val))           score++
+        if (/[^A-Za-z0-9]/.test(val))    score++
+
+        let colors  = ['bg-ia-error','bg-ia-warning','bg-amber-400','bg-ia-success']
+        let labels  = ['Weak','Fair','Good','Strong']
+        let bgColor = colors[score - 1] || 'bg-slate-200'
+
+        for (let i = 1; i <= 4; i++) {
+            let el = document.getElementById('s' + i)
+            el.className = 'h-full rounded-full transition-all duration-300 ' + (i <= score ? bgColor : 'bg-slate-200')
+        }
+        document.getElementById('strengthLabel').textContent = score > 0 ? labels[score - 1] : ''
+    }
+
+    // ── Confirm match ─────────────────────────────────────────────
+    function checkMatch() {
+        let np = document.getElementById('newPwd').value
+        let cp = document.getElementById('confirmPwd').value
+        let err = document.getElementById('confirmPwdError')
+        let ok  = document.getElementById('confirmPwdOk')
+        if (!cp) { err.classList.add('hidden'); ok.classList.add('hidden'); return }
+        let match = np === cp
+        err.classList.toggle('hidden',  match)
+        ok.classList.toggle('hidden',   !match)
+    }
+
+    // ── Save password ─────────────────────────────────────────────
+    function savePassword(e) {
+        e.preventDefault()
+        let cur  = document.getElementById('currentPwd')
+        let np   = document.getElementById('newPwd')
+        let cp   = document.getElementById('confirmPwd')
+        let ok   = true
+
+        document.getElementById('currentPwdError').classList.add('hidden')
+        document.getElementById('newPwdError').classList.add('hidden')
+
+        if (!cur.value)          { document.getElementById('currentPwdError').classList.remove('hidden'); ok=false }
+        if (np.value.length < 8) { document.getElementById('newPwdError').classList.remove('hidden');     ok=false }
+        if (np.value !== cp.value) { document.getElementById('confirmPwdError').classList.remove('hidden'); ok=false }
+
+        if (!ok) return
+        showToast('Password updated successfully.')
+        cur.value = np.value = cp.value = ''
+        document.getElementById('strengthMeter').classList.add('hidden')
+        document.getElementById('confirmPwdOk').classList.add('hidden')
+    }
+
+    // ── Theme ─────────────────────────────────────────────────────
+    let currentTheme = 'light'
+
+    function setTheme(t) {
+        currentTheme = t
+        let labels = { light:'Light', dark:'Dark', system:'System' }
+        ;['light','dark','system'].forEach(x => {
+            let card  = document.getElementById('theme-' + x)
+            let check = document.getElementById('check-' + x)
+            if (x === t) {
+                card.classList.add('selected','border-ia-primary')
+                card.classList.remove('border-slate-200')
+                check.classList.remove('hidden')
+                check.classList.add('flex')
+                check.classList.add('bg-ia-primary')
+            } else {
+                card.classList.remove('selected','border-ia-primary')
+                card.classList.add('border-slate-200')
+                check.classList.add('hidden')
+                check.classList.remove('flex','bg-ia-primary')
+            }
+        })
+        document.getElementById('themeActive').textContent = labels[t]
+        showToast('Theme set to ' + labels[t] + '.')
+    }
+
+    // ── Accent ────────────────────────────────────────────────────
+    function setAccent(color) {
+        showToast('Accent colour updated.')
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────
+    function showToast(msg) {
+        let toast = document.getElementById('toast')
+        document.getElementById('toastMsg').textContent = msg
+        toast.classList.remove('hide')
+        toast.classList.add('show')
+        setTimeout(() => {
+            toast.classList.remove('show')
+            toast.classList.add('hide')
+        }, 2800)
+    }
+</script>
+
+</body>
+</html>
