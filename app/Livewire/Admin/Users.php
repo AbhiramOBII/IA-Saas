@@ -46,7 +46,10 @@ class Users extends Component
     public function approve(int $userId): void
     {
         $user = User::whereNot('is_admin', true)->findOrFail($userId);
-        $user->update(['status' => 'approved']);
+        $user->update([
+            'status'            => 'approved',
+            'email_verified_at' => $user->email_verified_at ?? now(),
+        ]);
 
         Mail::to($user->email)->send(
             new WelcomeApproved($user, config('app.download_url', '#'))
