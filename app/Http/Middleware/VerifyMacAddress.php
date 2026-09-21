@@ -32,7 +32,7 @@ class VerifyMacAddress
         // or something is wrong. Revoke and force re-login.
         if (! $binding) {
             $passportToken->revoke();
-            $passportToken->refreshTokens()->update(['revoked' => true]);
+            optional($passportToken->refreshToken)->revoke();
 
             return response()->json([
                 'message' => 'Session invalid. Please log in again.',
@@ -44,7 +44,7 @@ class VerifyMacAddress
         if ($binding->mac_address !== $normalisedClient) {
             // Revoke access + refresh tokens
             $passportToken->revoke();
-            $passportToken->refreshTokens()->update(['revoked' => true]);
+            optional($passportToken->refreshToken)->revoke();
 
             // Remove the binding
             $binding->delete();

@@ -40,4 +40,8 @@ return [
         'client_secret' => env('PASSPORT_PASSWORD_CLIENT_SECRET'),
     ],
 
+    'zepto' => [
+        'api_key' => env('ZEPTO_API_KEY'),
+    ],
+
 ];

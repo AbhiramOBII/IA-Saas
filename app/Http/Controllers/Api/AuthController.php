@@ -147,7 +147,7 @@ class AuthController extends Controller
 
         // Revoke the token and its refresh tokens
         $token->revoke();
-        $token->refreshTokens()->update(['revoked' => true]);
+        optional($token->refreshToken)->revoke();
 
         return response()->json(['message' => 'Logged out successfully.']);
     }

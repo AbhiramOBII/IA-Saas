@@ -374,6 +374,7 @@
             <a href="#overview">Introduction</a>
             <a href="#base-url">Base URL &amp; Headers</a>
             <a href="#errors">Error Codes</a>
+            <a href="#changelog">Changelog</a>
         </div>
 
         <div class="nav-section">
@@ -413,7 +414,8 @@
         <div class="meta-chips">
             <span class="chip chip-blue">REST / JSON</span>
             <span class="chip chip-cyan">OAuth 2.0 Password Grant</span>
-            <span class="chip chip-slate">Laravel Passport</span>
+            <span class="chip chip-slate">Laravel 12 · Passport v13</span>
+            <span class="chip chip-slate">31 tests · 80 assertions</span>
         </div>
     </div>
 
@@ -485,7 +487,7 @@
                 <tr>
                     <td><span class="status s-403">403</span></td>
                     <td>Forbidden</td>
-                    <td>Email not verified, account pending approval, or account rejected.</td>
+                    <td>Email not verified, or account status is <code>pending</code>, <code>disabled</code>, <code>deactivated</code>, or <code>rejected</code>.</td>
                 </tr>
                 <tr>
                     <td><span class="status s-422">422</span></td>
@@ -597,9 +599,25 @@
                     </div>
                     <div class="code-block">
                         <div class="code-block-header">
-                            <span class="code-lang">403 — Not approved</span>
+                            <span class="code-lang">401 — Wrong credentials</span>
                         </div>
-<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Your account is awaiting admin approval."</span> <span class="p">}</span></pre>
+<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Invalid email or password."</span> <span class="p">}</span></pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-lang">403 — Account not active (examples)</span>
+                        </div>
+<pre><span class="cm">// Email not verified</span>
+<span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Please verify your email address before signing in."</span> <span class="p">}</span>
+
+<span class="cm">// pending</span>
+<span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Your account is awaiting admin approval."</span> <span class="p">}</span>
+
+<span class="cm">// disabled</span>
+<span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Your account has been temporarily disabled. Please contact support."</span> <span class="p">}</span>
+
+<span class="cm">// deactivated / rejected</span>
+<span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Your account has been deactivated. Please contact support."</span> <span class="p">}</span></pre>
                     </div>
                 </div>
             </div>
@@ -707,6 +725,7 @@
                     </div>
 <pre><span class="m">POST</span> <span class="url">/api/auth/logout</span>
 <span class="c">Authorization</span>: <span class="s">Bearer eyJ0eXAiOiJKV1...</span>
+<span class="c">X-Mac-Address</span>: <span class="s">AA:BB:CC:DD:EE:FF</span>
 <span class="c">Accept</span>: <span class="s">application/json</span></pre>
                 </div>
 
@@ -738,19 +757,89 @@
                     </div>
 <pre><span class="m">GET</span> <span class="url">/api/auth/me</span>
 <span class="c">Authorization</span>: <span class="s">Bearer eyJ0eXAiOiJKV1...</span>
+<span class="c">X-Mac-Address</span>: <span class="s">AA:BB:CC:DD:EE:FF</span>
 <span class="c">Accept</span>: <span class="s">application/json</span></pre>
                 </div>
 
                 <div class="code-block">
                     <div class="code-block-header"><span class="code-lang">200 — Success</span></div>
 <pre><span class="p">{</span>
-  <span class="c">"id"</span><span class="p">:</span>     <span class="n">5</span><span class="p">,</span>
-  <span class="c">"name"</span><span class="p">:</span>   <span class="s">"Jane Smith"</span><span class="p">,</span>
-  <span class="c">"email"</span><span class="p">:</span>  <span class="s">"jane@example.com"</span><span class="p">,</span>
-  <span class="c">"status"</span><span class="p">:</span> <span class="s">"approved"</span>
+  <span class="c">"id"</span><span class="p">:</span>           <span class="n">5</span><span class="p">,</span>
+  <span class="c">"name"</span><span class="p">:</span>         <span class="s">"Jane Smith"</span><span class="p">,</span>
+  <span class="c">"email"</span><span class="p">:</span>        <span class="s">"jane@example.com"</span><span class="p">,</span>
+  <span class="c">"organization"</span><span class="p">:</span> <span class="s">"Emergent Consulting Inc."</span><span class="p">,</span>
+  <span class="c">"designation"</span><span class="p">:</span>  <span class="s">"Data Analyst"</span><span class="p">,</span>
+  <span class="c">"status"</span><span class="p">:</span>       <span class="s">"approved"</span>
 <span class="p">}</span></pre>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ── CHANGELOG ── -->
+    <div class="section" id="changelog">
+        <h2 class="section-title">Changelog</h2>
+        <p class="section-desc">Release history and notable changes.</p>
+
+        <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+
+            <!-- v1.1.0 -->
+            <div style="padding:20px 24px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--primary);">v1.1.0</span>
+                    <span style="font-size:12px;color:var(--text-muted);">21 Sep 2026</span>
+                    <span style="margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.25);">Latest</span>
+                </div>
+                <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--success);font-weight:700;shrink:0;">fix</span>
+                        <span><code>POST /api/auth/logout</code> — corrected refresh-token revocation to use Passport v13's <code>refreshToken</code> (singular HasOne) instead of the removed <code>refreshTokens()</code> HasMany. Prevents 500 on logout.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--success);font-weight:700;shrink:0;">fix</span>
+                        <span><code>VerifyMacAddress</code> middleware — same refresh-token revocation fix applied to the device-mismatch and unbound-token paths.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;shrink:0;">feat</span>
+                        <span>Account statuses <code>disabled</code> and <code>deactivated</code> are now persisted in the database (added to <code>users.status</code> enum via migration).</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;shrink:0;">feat</span>
+                        <span><code>GET /api/auth/me</code> response now includes <code>organization</code> and <code>designation</code> fields.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--accent);font-weight:700;shrink:0;">mail</span>
+                        <span>Transactional email switched to <strong>ZeptoMail</strong> via a custom Symfony transport. Sender name updated to <em>Intelligent Accelerators</em>.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--accent);font-weight:700;shrink:0;">test</span>
+                        <span>31 feature tests / 80 assertions added covering login, refresh, logout, <code>/me</code>, MAC binding, and MAC normalisation.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- v1.0.0 -->
+            <div style="padding:20px 24px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--primary);">v1.0.0</span>
+                    <span style="font-size:12px;color:var(--text-muted);">02 Sep 2026</span>
+                </div>
+                <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;shrink:0;">feat</span>
+                        <span>Initial API release — <code>login</code>, <code>refresh</code>, <code>logout</code>, <code>/me</code> endpoints via Laravel Passport password grant.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;shrink:0;">feat</span>
+                        <span>MAC-address token binding via <code>token_mac_bindings</code> table and <code>VerifyMacAddress</code> middleware.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;shrink:0;">feat</span>
+                        <span>Account status gates — unverified email, pending, disabled, deactivated, rejected all return appropriate 401/403 responses.</span>
+                    </li>
+                </ul>
+            </div>
+
         </div>
     </div>
 
