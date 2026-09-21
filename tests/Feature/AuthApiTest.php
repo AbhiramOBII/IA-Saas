@@ -6,7 +6,6 @@ use App\Models\TokenMacBinding;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AuthApiTest extends TestCase
@@ -22,15 +21,15 @@ class AuthApiTest extends TestCase
     {
         parent::setUp();
 
-        // Create a Passport personal-access client so createToken() works
+        // Personal-access client is required for createToken() to work.
         Artisan::call('passport:client', [
-            '--personal' => true,
-            '--name'     => 'Test Personal Access Client',
+            '--personal'       => true,
+            '--name'           => 'Test Personal Access Client',
             '--no-interaction' => true,
         ]);
     }
 
-    // ── Factories ─────────────────────────────────────────────────
+    // ── Factories / helpers ───────────────────────────────────────
 
     private function approvedUser(array $attrs = []): User
     {
@@ -42,21 +41,27 @@ class AuthApiTest extends TestCase
     }
 
     /**
-     * Issue a real Passport personal-access token for a user
-     * and optionally bind a MAC address to it.
-     * Returns ['jwt' => string, 'id' => string]
+     * Issue a real device-bound token for a user.
+     * Returns ['jwt' => string, 'id' => string].
      */
     private function issueToken(User $user, ?string $mac = null): array
     {
         $result = $user->createToken('desktop-app');
-        $jwt    = $result->accessToken;
-        $id     = $result->token->id;
 
         if ($mac) {
-            TokenMacBinding::bind($id, $mac);
+            TokenMacBinding::bind($result->token->id, $mac);
         }
 
-        return ['jwt' => $jwt, 'id' => $id];
+        return ['jwt' => $result->accessToken, 'id' => $result->token->id];
+    }
+
+    private function login(User $user, string $mac = self::MAC)
+    {
+        return $this->postJson('/api/auth/login', [
+            'email'       => $user->email,
+            'password'    => 'password',
+            'mac_address' => $mac,
+        ]);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -66,83 +71,53 @@ class AuthApiTest extends TestCase
     /** @test */
     public function login_returns_422_when_email_is_missing(): void
     {
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'password'    => 'password',
             'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+        ])->assertStatus(422)->assertJsonValidationErrors(['email']);
     }
 
     /** @test */
     public function login_returns_422_when_password_is_missing(): void
     {
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'email'       => 'user@example.com',
             'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(422)
-            ->assertJsonValidationErrors(['password']);
+        ])->assertStatus(422)->assertJsonValidationErrors(['password']);
     }
 
     /** @test */
     public function login_returns_422_when_mac_address_is_missing(): void
     {
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'email'    => 'user@example.com',
             'password' => 'password',
-        ]);
-
-        $res->assertStatus(422)
-            ->assertJsonValidationErrors(['mac_address'])
-            ->assertJsonPath('errors.mac_address.0', 'A MAC address is required to identify this device.');
+        ])->assertStatus(422)
+          ->assertJsonValidationErrors(['mac_address'])
+          ->assertJsonPath('errors.mac_address.0', 'A MAC address is required to identify this device.');
     }
 
     /** @test */
     public function login_returns_422_for_invalid_mac_format(): void
     {
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'email'       => 'user@example.com',
             'password'    => 'password',
             'mac_address' => 'NOT-VALID-MAC',
-        ]);
-
-        $res->assertStatus(422)
-            ->assertJsonPath('errors.mac_address.0', 'The MAC address format is invalid.');
+        ])->assertStatus(422)
+          ->assertJsonPath('errors.mac_address.0', 'The MAC address format is invalid.');
     }
 
     /** @test */
     public function login_accepts_hyphen_separated_mac(): void
     {
-        $user = $this->approvedUser();
-
-        Http::fake(['*/oauth/token' => Http::response($this->fakeTokenPayload(), 200)]);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => 'AA-BB-CC-DD-EE-FF', // hyphens
-        ]);
-
-        $res->assertStatus(200);
+        $this->login($this->approvedUser(), 'AA-BB-CC-DD-EE-FF')->assertStatus(200);
     }
 
     /** @test */
     public function login_accepts_plain_hex_mac(): void
     {
-        $user = $this->approvedUser();
-
-        Http::fake(['*/oauth/token' => Http::response($this->fakeTokenPayload(), 200)]);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => 'AABBCCDDEEFF', // no separators
-        ]);
-
-        $res->assertStatus(200);
+        $this->login($this->approvedUser(), 'AABBCCDDEEFF')->assertStatus(200);
     }
 
     /** @test */
@@ -150,27 +125,21 @@ class AuthApiTest extends TestCase
     {
         $user = $this->approvedUser();
 
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'email'       => $user->email,
             'password'    => 'wrong-password',
             'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(401)
-            ->assertJson(['message' => 'Invalid email or password.']);
+        ])->assertStatus(401)->assertJson(['message' => 'Invalid email or password.']);
     }
 
     /** @test */
     public function login_returns_401_for_non_existent_user(): void
     {
-        $res = $this->postJson('/api/auth/login', [
+        $this->postJson('/api/auth/login', [
             'email'       => 'nobody@example.com',
             'password'    => 'password',
             'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(401)
-            ->assertJson(['message' => 'Invalid email or password.']);
+        ])->assertStatus(401)->assertJson(['message' => 'Invalid email or password.']);
     }
 
     /** @test */
@@ -181,101 +150,71 @@ class AuthApiTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(403)
+        $this->login($user)->assertStatus(403)
             ->assertJson(['message' => 'Please verify your email address before signing in.']);
     }
 
     /** @test */
     public function login_returns_403_for_pending_account(): void
     {
-        $user = $this->approvedUser(['status' => 'pending']);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(403)
+        $this->login($this->approvedUser(['status' => 'pending']))
+            ->assertStatus(403)
             ->assertJson(['message' => 'Your account is awaiting admin approval.']);
     }
 
     /** @test */
     public function login_returns_403_for_disabled_account(): void
     {
-        $user = $this->approvedUser(['status' => 'disabled']);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(403);
+        $this->login($this->approvedUser(['status' => 'disabled']))->assertStatus(403);
     }
 
     /** @test */
     public function login_returns_403_for_deactivated_account(): void
     {
-        $user = $this->approvedUser(['status' => 'deactivated']);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(403);
+        $this->login($this->approvedUser(['status' => 'deactivated']))->assertStatus(403);
     }
 
     /** @test */
-    public function login_returns_tokens_and_user_for_approved_user(): void
+    public function login_returns_token_and_user_for_approved_user(): void
     {
         $user = $this->approvedUser();
 
-        Http::fake(['*/oauth/token' => Http::response($this->fakeTokenPayload(), 200)]);
-
-        $res = $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ]);
-
-        $res->assertStatus(200)
+        $this->login($user)
+            ->assertStatus(200)
             ->assertJsonStructure([
                 'token_type',
                 'access_token',
-                'refresh_token',
                 'expires_in',
                 'user' => ['id', 'name', 'email'],
             ])
+            ->assertJsonPath('token_type', 'Bearer')
             ->assertJsonPath('user.email', $user->email);
     }
 
     /** @test */
-    public function login_stores_mac_binding_on_success(): void
+    public function login_stores_a_mac_binding(): void
     {
         $user = $this->approvedUser();
-        $jti  = 'test-jti-' . uniqid();
 
-        Http::fake(['*/oauth/token' => Http::response($this->fakeTokenPayload($jti), 200)]);
-
-        $this->postJson('/api/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'password',
-            'mac_address' => self::MAC,
-        ])->assertStatus(200);
+        $this->login($user)->assertStatus(200);
 
         $this->assertDatabaseHas('token_mac_bindings', [
-            'token_id'    => $jti,
             'mac_address' => TokenMacBinding::normaliseMac(self::MAC),
         ]);
+    }
+
+    /** @test */
+    public function login_token_can_be_used_to_access_protected_route(): void
+    {
+        $user = $this->approvedUser();
+
+        $token = $this->login($user)->json('access_token');
+
+        $this->withHeader('Authorization', 'Bearer ' . $token)
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->getJson('/api/auth/me')
+             ->assertStatus(200)
+             ->assertJsonPath('email', $user->email);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -291,42 +230,36 @@ class AuthApiTest extends TestCase
     /** @test */
     public function me_returns_422_when_mac_header_is_missing(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user, self::MAC);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
-        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
-                    ->getJson('/api/auth/me');
-
-        $res->assertStatus(422)
-            ->assertJsonPath('code', 'mac_missing');
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->getJson('/api/auth/me')
+             ->assertStatus(422)
+             ->assertJsonPath('code', 'mac_missing');
     }
 
     /** @test */
     public function me_returns_401_for_mac_mismatch(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user, self::MAC);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
-        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
-                    ->withHeader('X-Mac-Address', self::MAC2)
-                    ->getJson('/api/auth/me');
-
-        $res->assertStatus(401)
-            ->assertJsonPath('code', 'mac_mismatch');
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC2)
+             ->getJson('/api/auth/me')
+             ->assertStatus(401)
+             ->assertJsonPath('code', 'mac_mismatch');
     }
 
     /** @test */
     public function me_returns_401_when_no_binding_exists(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user); // no MAC bound
+        $token = $this->issueToken($this->approvedUser()); // no MAC bound
 
-        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
-                    ->withHeader('X-Mac-Address', self::MAC)
-                    ->getJson('/api/auth/me');
-
-        $res->assertStatus(401)
-            ->assertJsonPath('code', 'mac_unbound');
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->getJson('/api/auth/me')
+             ->assertStatus(401)
+             ->assertJsonPath('code', 'mac_unbound');
     }
 
     /** @test */
@@ -338,30 +271,27 @@ class AuthApiTest extends TestCase
         ]);
         $token = $this->issueToken($user, self::MAC);
 
-        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
-                    ->withHeader('X-Mac-Address', self::MAC)
-                    ->getJson('/api/auth/me');
-
-        $res->assertStatus(200)
-            ->assertJsonStructure(['id', 'name', 'email', 'organization', 'designation', 'status'])
-            ->assertJsonPath('email',        $user->email)
-            ->assertJsonPath('organization', 'Emergent Consulting')
-            ->assertJsonPath('designation',  'Analyst')
-            ->assertJsonPath('status',       'approved');
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->getJson('/api/auth/me')
+             ->assertStatus(200)
+             ->assertJsonStructure(['id', 'name', 'email', 'organization', 'designation', 'status'])
+             ->assertJsonPath('email',        $user->email)
+             ->assertJsonPath('organization', 'Emergent Consulting')
+             ->assertJsonPath('designation',  'Analyst')
+             ->assertJsonPath('status',       'approved');
     }
 
     /** @test */
-    public function me_revokes_token_on_mac_mismatch(): void
+    public function me_revokes_binding_on_mac_mismatch(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user, self::MAC);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
         $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
              ->withHeader('X-Mac-Address', self::MAC2)
              ->getJson('/api/auth/me')
              ->assertStatus(401);
 
-        // After mismatch the binding should be gone
         $this->assertDatabaseMissing('token_mac_bindings', ['token_id' => $token['id']]);
     }
 
@@ -378,15 +308,13 @@ class AuthApiTest extends TestCase
     /** @test */
     public function logout_returns_200_and_removes_mac_binding(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user, self::MAC);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
-        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
-                    ->withHeader('X-Mac-Address', self::MAC)
-                    ->postJson('/api/auth/logout');
-
-        $res->assertStatus(200)
-            ->assertJson(['message' => 'Logged out successfully.']);
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->postJson('/api/auth/logout')
+             ->assertStatus(200)
+             ->assertJson(['message' => 'Logged out successfully.']);
 
         $this->assertDatabaseMissing('token_mac_bindings', ['token_id' => $token['id']]);
     }
@@ -394,15 +322,14 @@ class AuthApiTest extends TestCase
     /** @test */
     public function logout_revokes_the_access_token(): void
     {
-        $user  = $this->approvedUser();
-        $token = $this->issueToken($user, self::MAC);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
         $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
              ->withHeader('X-Mac-Address', self::MAC)
              ->postJson('/api/auth/logout')
              ->assertStatus(200);
 
-        // Subsequent call with same token should be rejected
+        // Same token can no longer be used
         $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
              ->withHeader('X-Mac-Address', self::MAC)
              ->getJson('/api/auth/me')
@@ -410,79 +337,68 @@ class AuthApiTest extends TestCase
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  POST /api/auth/refresh
+    //  POST /api/auth/refresh  (bearer + MAC; rotates the token)
     // ══════════════════════════════════════════════════════════════
 
     /** @test */
-    public function refresh_returns_422_when_refresh_token_is_missing(): void
+    public function refresh_returns_401_without_token(): void
     {
-        $this->postJson('/api/auth/refresh', [
-            'mac_address' => self::MAC,
-        ])->assertStatus(422)->assertJsonValidationErrors(['refresh_token']);
+        $this->postJson('/api/auth/refresh')->assertStatus(401);
     }
 
     /** @test */
-    public function refresh_returns_422_when_mac_is_missing(): void
+    public function refresh_returns_422_when_mac_header_is_missing(): void
     {
-        $this->postJson('/api/auth/refresh', [
-            'refresh_token' => 'some-token',
-        ])->assertStatus(422)->assertJsonValidationErrors(['mac_address']);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
+
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->postJson('/api/auth/refresh')
+             ->assertStatus(422)
+             ->assertJsonPath('code', 'mac_missing');
     }
 
     /** @test */
-    public function refresh_returns_401_for_invalid_refresh_token(): void
+    public function refresh_returns_a_new_token_bound_to_the_same_mac(): void
     {
-        Http::fake(['*/oauth/token' => Http::response(['error' => 'invalid_grant'], 400)]);
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
 
-        $res = $this->postJson('/api/auth/refresh', [
-            'refresh_token' => 'expired-or-bad-token',
-            'mac_address'   => self::MAC,
-        ]);
-
-        $res->assertStatus(401)
-            ->assertJson(['message' => 'Invalid or expired refresh token.']);
-    }
-
-    /** @test */
-    public function refresh_returns_new_tokens_on_valid_refresh_token(): void
-    {
-        $jti = 'new-jti-' . uniqid();
-
-        Http::fake([
-            '*/oauth/token' => Http::response($this->fakeTokenPayload($jti), 200),
-        ]);
-
-        $res = $this->postJson('/api/auth/refresh', [
-            'refresh_token' => 'valid-refresh-token',
-            'mac_address'   => self::MAC,
-        ]);
+        $res = $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+                    ->withHeader('X-Mac-Address', self::MAC)
+                    ->postJson('/api/auth/refresh');
 
         $res->assertStatus(200)
-            ->assertJsonStructure(['token_type', 'access_token', 'refresh_token', 'expires_in']);
-    }
+            ->assertJsonStructure(['token_type', 'access_token', 'expires_in', 'user']);
 
-    /** @test */
-    public function refresh_binds_new_token_to_mac_address(): void
-    {
-        $jti = 'refresh-jti-' . uniqid();
+        // The new token is a different string from the old one
+        $this->assertNotSame($token['jwt'], $res->json('access_token'));
 
-        Http::fake([
-            '*/oauth/token' => Http::response($this->fakeTokenPayload($jti), 200),
-        ]);
-
-        $this->postJson('/api/auth/refresh', [
-            'refresh_token' => 'valid-refresh-token',
-            'mac_address'   => self::MAC,
-        ])->assertStatus(200);
-
+        // The new token is bound to the same MAC
         $this->assertDatabaseHas('token_mac_bindings', [
-            'token_id'    => $jti,
             'mac_address' => TokenMacBinding::normaliseMac(self::MAC),
         ]);
     }
 
+    /** @test */
+    public function refresh_revokes_the_old_token(): void
+    {
+        $token = $this->issueToken($this->approvedUser(), self::MAC);
+
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->postJson('/api/auth/refresh')
+             ->assertStatus(200);
+
+        // Old binding removed and old token unusable
+        $this->assertDatabaseMissing('token_mac_bindings', ['token_id' => $token['id']]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $token['jwt'])
+             ->withHeader('X-Mac-Address', self::MAC)
+             ->getJson('/api/auth/me')
+             ->assertStatus(401);
+    }
+
     // ══════════════════════════════════════════════════════════════
-    //  MAC normalisation (unit-style, lives here for convenience)
+    //  MAC normalisation
     // ══════════════════════════════════════════════════════════════
 
     /** @test */
@@ -501,30 +417,5 @@ class AuthApiTest extends TestCase
     public function mac_normalisation_handles_plain_hex(): void
     {
         $this->assertSame('aa:bb:cc:dd:ee:ff', TokenMacBinding::normaliseMac('AABBCCDDEEFF'));
-    }
-
-    // ── Private helpers ───────────────────────────────────────────
-
-    /**
-     * Build a fake OAuth token response payload with a parseable JWT.
-     */
-    private function fakeTokenPayload(string $jti = 'fake-jti'): array
-    {
-        return [
-            'token_type'    => 'Bearer',
-            'access_token'  => $this->fakeJwt($jti),
-            'refresh_token' => 'fake-refresh-' . uniqid(),
-            'expires_in'    => 3600,
-        ];
-    }
-
-    /**
-     * Build a 3-part JWT-like string whose payload contains the given jti.
-     */
-    private function fakeJwt(string $jti = 'fake-jti'): string
-    {
-        $header  = rtrim(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '=');
-        $payload = rtrim(base64_encode(json_encode(['jti' => $jti, 'sub' => 1])), '=');
-        return $header . '.' . $payload . '.fake-signature';
     }
 }

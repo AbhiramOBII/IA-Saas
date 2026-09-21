@@ -8,11 +8,13 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    // MAC address: AA:BB:CC:DD:EE:FF | AA-BB-CC-DD-EE-FF | AABBCCDDEEFF
+    private const MAC_REGEX = '/^([0-9A-Fa-f]{2}[:\-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/';
+
     // ----------------------------------------------------------------
     //  POST /api/auth/login
     //  Body: { email, password, mac_address }
@@ -22,7 +24,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email'       => 'required|email',
             'password'    => 'required|string',
-            'mac_address' => ['required', 'string', 'regex:/^([0-9A-Fa-f]{2}[:\-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/'],
+            'mac_address' => ['required', 'string', 'regex:'.self::MAC_REGEX],
         ], [
             'mac_address.required' => 'A MAC address is required to identify this device.',
             'mac_address.regex'    => 'The MAC address format is invalid.',
@@ -49,37 +51,90 @@ class AuthController extends Controller
 
         // 3. Account must be active
         if ($user->status !== 'approved') {
-            $msg = match ($user->status) {
-                'pending'     => 'Your account is awaiting admin approval.',
-                'disabled'    => 'Your account has been temporarily disabled. Please contact support.',
-                'deactivated',
-                'rejected'    => 'Your account has been deactivated. Please contact support.',
-                default       => 'Your account is not active.',
-            };
-
-            return response()->json(['message' => $msg], 403);
+            return response()->json(['message' => $this->inactiveMessage($user->status)], 403);
         }
 
-        // 4. Issue tokens via Passport password grant
-        $tokenResponse = $this->requestPasswordToken($request->email, $request->password);
+        // 4. Issue a token directly (no OAuth round-trip) and bind it to the device
+        return $this->issueToken($user, $request->mac_address);
+    }
 
-        if (! $tokenResponse->successful()) {
-            return response()->json(['message' => 'Authentication failed. Please try again.'], 401);
-        }
+    // ----------------------------------------------------------------
+    //  POST /api/auth/refresh
+    //  Header: Authorization: Bearer <token>, X-Mac-Address: <mac>
+    //  Rotates the current token for a fresh one on the same device.
+    //  (auth:api + verify.mac run before this.)
+    // ----------------------------------------------------------------
+    public function refresh(Request $request): JsonResponse
+    {
+        $user      = $request->user();
+        $oldToken  = $user->token();
+        $clientMac = $request->header('X-Mac-Address') ?? $request->input('mac_address');
 
-        $tokens = $tokenResponse->json();
+        // Issue the replacement token bound to the same device
+        $response = $this->issueToken($user, $clientMac);
 
-        // 5. Bind the new token to this device's MAC address
-        $jti = TokenMacBinding::jtiFromJwt($tokens['access_token']);
-        if ($jti) {
-            TokenMacBinding::bind($jti, $request->mac_address);
-        }
+        // Revoke the old token + its MAC binding
+        TokenMacBinding::where('token_id', $oldToken->id)->delete();
+        $oldToken->revoke();
+
+        return $response;
+    }
+
+    // ----------------------------------------------------------------
+    //  POST /api/auth/logout
+    //  Header: Authorization: Bearer <token>, X-Mac-Address: <mac>
+    // ----------------------------------------------------------------
+    public function logout(Request $request): JsonResponse
+    {
+        $token = $request->user()->token();
+
+        TokenMacBinding::where('token_id', $token->id)->delete();
+        $token->revoke();
+
+        return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    // ----------------------------------------------------------------
+    //  GET /api/auth/me
+    //  Header: Authorization: Bearer <token>, X-Mac-Address: <mac>
+    // ----------------------------------------------------------------
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
 
         return response()->json([
-            'token_type'    => $tokens['token_type'],
-            'access_token'  => $tokens['access_token'],
-            'refresh_token' => $tokens['refresh_token'],
-            'expires_in'    => $tokens['expires_in'],
+            'id'           => $user->id,
+            'name'         => $user->name,
+            'email'        => $user->email,
+            'organization' => $user->organization,
+            'designation'  => $user->designation,
+            'status'       => $user->status,
+        ]);
+    }
+
+    // ----------------------------------------------------------------
+    //  Helpers
+    // ----------------------------------------------------------------
+
+    /**
+     * Create a personal access token for the user, bind it to the given
+     * MAC address, and build the JSON auth response.
+     */
+    private function issueToken(User $user, string $mac): JsonResponse
+    {
+        $result = $user->createToken('desktop-app');
+        $token  = $result->token;
+
+        TokenMacBinding::bind($token->id, $mac);
+
+        $expiresIn = $token->expires_at
+            ? (int) round(now()->diffInSeconds($token->expires_at, false))
+            : null;
+
+        return response()->json([
+            'token_type'   => 'Bearer',
+            'access_token' => $result->accessToken,
+            'expires_in'   => $expiresIn,
             'user' => [
                 'id'    => $user->id,
                 'name'  => $user->name,
@@ -88,101 +143,14 @@ class AuthController extends Controller
         ]);
     }
 
-    // ----------------------------------------------------------------
-    //  POST /api/auth/refresh
-    //  Body: { refresh_token, mac_address }
-    //  Header: X-Mac-Address  (either location is accepted)
-    // ----------------------------------------------------------------
-    public function refresh(Request $request): JsonResponse
+    private function inactiveMessage(string $status): string
     {
-        $validator = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-            'mac_address'   => ['required', 'string', 'regex:/^([0-9A-Fa-f]{2}[:\-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/'],
-        ], [
-            'mac_address.required' => 'A MAC address is required to identify this device.',
-            'mac_address.regex'    => 'The MAC address format is invalid.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $response = Http::asForm()->post(config('app.url').'/oauth/token', [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $request->refresh_token,
-            'client_id'     => config('services.passport.client_id'),
-            'client_secret' => config('services.passport.client_secret'),
-            'scope'         => '',
-        ]);
-
-        if (! $response->successful()) {
-            return response()->json(['message' => 'Invalid or expired refresh token.'], 401);
-        }
-
-        $tokens = $response->json();
-
-        // Bind the new access token to the same MAC address
-        $jti = TokenMacBinding::jtiFromJwt($tokens['access_token']);
-        if ($jti) {
-            TokenMacBinding::bind($jti, $request->mac_address);
-        }
-
-        return response()->json($tokens);
-    }
-
-    // ----------------------------------------------------------------
-    //  POST /api/auth/logout
-    //  Header: Authorization: Bearer <token>
-    //          X-Mac-Address: <mac>   (validated by middleware before this)
-    // ----------------------------------------------------------------
-    public function logout(Request $request): JsonResponse
-    {
-        $token = $request->user()->token();
-
-        // Clean up the MAC binding
-        TokenMacBinding::where('token_id', $token->id)->delete();
-
-        // Revoke the token and its refresh tokens
-        $token->revoke();
-        optional($token->refreshToken)->revoke();
-
-        return response()->json(['message' => 'Logged out successfully.']);
-    }
-
-    // ----------------------------------------------------------------
-    //  GET /api/auth/me
-    //  Header: Authorization: Bearer <token>
-    //          X-Mac-Address: <mac>   (validated by middleware)
-    // ----------------------------------------------------------------
-    public function me(Request $request): JsonResponse
-    {
-        $user = $request->user();
-
-        return response()->json([
-            'id'          => $user->id,
-            'name'        => $user->name,
-            'email'       => $user->email,
-            'organization'=> $user->organization,
-            'designation' => $user->designation,
-            'status'      => $user->status,
-        ]);
-    }
-
-    // ----------------------------------------------------------------
-    //  Internal helper — request a new token from the OAuth server
-    // ----------------------------------------------------------------
-    private function requestPasswordToken(string $email, string $password)
-    {
-        return Http::asForm()->post(config('app.url').'/oauth/token', [
-            'grant_type'    => 'password',
-            'client_id'     => config('services.passport.client_id'),
-            'client_secret' => config('services.passport.client_secret'),
-            'username'      => $email,
-            'password'      => $password,
-            'scope'         => '',
-        ]);
+        return match ($status) {
+            'pending'     => 'Your account is awaiting admin approval.',
+            'disabled'    => 'Your account has been temporarily disabled. Please contact support.',
+            'deactivated',
+            'rejected'    => 'Your account has been deactivated. Please contact support.',
+            default       => 'Your account is not active.',
+        };
     }
 }

@@ -384,7 +384,7 @@
                 <span class="badge method-post">POST</span>
             </a>
             <a href="#refresh">
-                Refresh Token
+                Refresh Token 🔒
                 <span class="badge method-post">POST</span>
             </a>
             <a href="#logout">
@@ -413,7 +413,7 @@
         <p>REST API for the Intelligent Accelerators desktop application. All endpoints return JSON.</p>
         <div class="meta-chips">
             <span class="chip chip-blue">REST / JSON</span>
-            <span class="chip chip-cyan">OAuth 2.0 Password Grant</span>
+            <span class="chip chip-cyan">Bearer Tokens · Device-Bound</span>
             <span class="chip chip-slate">Laravel 12 · Passport v13</span>
             <span class="chip chip-slate">31 tests · 80 assertions</span>
         </div>
@@ -586,10 +586,9 @@
                             <button class="code-copy" onclick="copyCode(this)">Copy</button>
                         </div>
 <pre><span class="p">{</span>
-  <span class="c">"token_type"</span><span class="p">:</span>    <span class="s">"Bearer"</span><span class="p">,</span>
-  <span class="c">"access_token"</span><span class="p">:</span>  <span class="s">"eyJ0eXAiOiJKV1..."</span><span class="p">,</span>
-  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200abc123..."</span><span class="p">,</span>
-  <span class="c">"expires_in"</span><span class="p">:</span>    <span class="n">31536000</span><span class="p">,</span>
+  <span class="c">"token_type"</span><span class="p">:</span>   <span class="s">"Bearer"</span><span class="p">,</span>
+  <span class="c">"access_token"</span><span class="p">:</span> <span class="s">"eyJ0eXAiOiJKV1..."</span><span class="p">,</span>
+  <span class="c">"expires_in"</span><span class="p">:</span>   <span class="n">31536000</span><span class="p">,</span>
   <span class="c">"user"</span><span class="p">: {</span>
     <span class="c">"id"</span><span class="p">:</span>    <span class="n">5</span><span class="p">,</span>
     <span class="c">"name"</span><span class="p">:</span>  <span class="s">"Jane Smith"</span><span class="p">,</span>
@@ -627,72 +626,55 @@
     <!-- ── REFRESH ── -->
     <div class="section" id="refresh">
         <h2 class="section-title">Refresh Token</h2>
-        <p class="section-desc">Exchanges a valid refresh token for a new access token and refresh token pair. The old refresh token is invalidated.</p>
+        <p class="section-desc">Rotates the current access token — issues a new device-bound token and immediately revokes the one used to make the request. Authenticate with the current <code>Bearer</code> token and matching <code>X-Mac-Address</code>.</p>
 
         <div class="endpoint">
             <div class="endpoint-header">
                 <span class="method method-POST">POST</span>
                 <span class="endpoint-path">/api/auth/refresh</span>
-                <span class="endpoint-summary">No auth required</span>
+                <span class="auth-pill">🔒 Requires Auth</span>
             </div>
             <div class="endpoint-body">
 
-                <div class="tabs">
-                    <button class="tab active" onclick="switchTab(this,'refresh','request')">Request</button>
-                    <button class="tab"        onclick="switchTab(this,'refresh','response')">Response</button>
+                <div class="callout callout-info">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                    </svg>
+                    <span>No request body is needed. The token to rotate is taken from the <code>Authorization</code> header; the new token is bound to the MAC in <code>X-Mac-Address</code>. The old token is revoked and can no longer be used.</span>
                 </div>
 
-                <div id="refresh-request" class="tab-panel active">
-                    <table class="fields-table">
-                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-                        <tbody>
-                            <tr>
-                                <td><span class="field-name">refresh_token</span><span class="required">*</span></td>
-                                <td><span class="field-type">string</span></td>
-                                <td>The refresh token received from login or a previous refresh.</td>
-                            </tr>
-                            <tr>
-                                <td><span class="field-name">mac_address</span><span class="required">*</span></td>
-                                <td><span class="field-type">string</span></td>
-                                <td>The MAC address of the device. Must match the value used at login. The new token will be bound to this address.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="code-block">
-                        <div class="code-block-header">
-                            <span class="code-lang">Example Request</span>
-                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
-                        </div>
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-lang">Example Request</span>
+                        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    </div>
 <pre><span class="m">POST</span> <span class="url">/api/auth/refresh</span>
-<span class="c">Content-Type</span>: <span class="s">application/json</span>
-<span class="c">Accept</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200abc123..."</span><span class="p">,</span>
-  <span class="c">"mac_address"</span><span class="p">:</span>   <span class="s">"AA:BB:CC:DD:EE:FF"</span>
-<span class="p">}</span></pre>
-                    </div>
+<span class="c">Authorization</span>: <span class="s">Bearer eyJ0eXAiOiJKV1...</span>
+<span class="c">X-Mac-Address</span>: <span class="s">AA:BB:CC:DD:EE:FF</span>
+<span class="c">Accept</span>: <span class="s">application/json</span></pre>
                 </div>
 
-                <div id="refresh-response" class="tab-panel">
-                    <div class="code-block">
-                        <div class="code-block-header">
-                            <span class="code-lang">200 — Success</span>
-                        </div>
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-lang">200 — Success</span>
+                    </div>
 <pre><span class="p">{</span>
-  <span class="c">"token_type"</span><span class="p">:</span>    <span class="s">"Bearer"</span><span class="p">,</span>
-  <span class="c">"access_token"</span><span class="p">:</span>  <span class="s">"eyJ0eXAiOiJKV1..."</span><span class="p">,</span>
-  <span class="c">"refresh_token"</span><span class="p">:</span> <span class="s">"def50200xyz456..."</span><span class="p">,</span>
-  <span class="c">"expires_in"</span><span class="p">:</span>    <span class="n">31536000</span>
+  <span class="c">"token_type"</span><span class="p">:</span>   <span class="s">"Bearer"</span><span class="p">,</span>
+  <span class="c">"access_token"</span><span class="p">:</span> <span class="s">"eyJ0eXAiOiJKV1...(new)"</span><span class="p">,</span>
+  <span class="c">"expires_in"</span><span class="p">:</span>   <span class="n">31536000</span><span class="p">,</span>
+  <span class="c">"user"</span><span class="p">: {</span>
+    <span class="c">"id"</span><span class="p">:</span>    <span class="n">5</span><span class="p">,</span>
+    <span class="c">"name"</span><span class="p">:</span>  <span class="s">"Jane Smith"</span><span class="p">,</span>
+    <span class="c">"email"</span><span class="p">:</span> <span class="s">"jane@example.com"</span>
+  <span class="p">}</span>
 <span class="p">}</span></pre>
+                </div>
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-lang">401 — Invalid / expired token</span>
                     </div>
-                    <div class="code-block">
-                        <div class="code-block-header">
-                            <span class="code-lang">401 — Invalid / expired</span>
-                        </div>
-<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Invalid or expired refresh token."</span> <span class="p">}</span></pre>
-                    </div>
+<pre><span class="p">{</span> <span class="c">"message"</span><span class="p">:</span> <span class="s">"Unauthenticated."</span> <span class="p">}</span></pre>
                 </div>
             </div>
         </div>
@@ -701,7 +683,7 @@
     <!-- ── LOGOUT ── -->
     <div class="section" id="logout">
         <h2 class="section-title">Logout</h2>
-        <p class="section-desc">Revokes the current access token and its paired refresh token. The token cannot be used after this call.</p>
+        <p class="section-desc">Revokes the current access token and removes its device binding. The token cannot be used after this call.</p>
 
         <div class="endpoint">
             <div class="endpoint-header">
@@ -715,7 +697,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
                     </svg>
-                    <span>Both the access token and paired refresh token are revoked. The user must call <strong>login</strong> again to obtain new tokens.</span>
+                    <span>The access token is revoked and its device binding removed. The user must call <strong>login</strong> again to obtain a new token.</span>
                 </div>
 
                 <div class="code-block">
@@ -783,12 +765,38 @@
 
         <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;">
 
+            <!-- v1.2.0 -->
+            <div style="padding:20px 24px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--primary);">v1.2.0</span>
+                    <span style="font-size:12px;color:var(--text-muted);">21 Sep 2026</span>
+                    <span style="margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.25);">Latest</span>
+                </div>
+                <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:#D97706;font-weight:700;shrink:0;">change</span>
+                        <span><strong>Login no longer uses the OAuth2 password grant.</strong> Tokens are now issued directly with Passport personal access tokens — no internal HTTP call to <code>/oauth/token</code>, no password-grant client, and no <code>PASSPORT_PASSWORD_CLIENT_*</code> env vars. This removes a class of production failures on shared hosting.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:#D97706;font-weight:700;shrink:0;">change</span>
+                        <span><code>POST /api/auth/refresh</code> is now an authenticated endpoint. Send the current <code>Bearer</code> token + <code>X-Mac-Address</code>; it rotates to a new token and revokes the old one. The <code>refresh_token</code> body field is removed.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:#D97706;font-weight:700;shrink:0;">change</span>
+                        <span>Login and refresh responses no longer include a <code>refresh_token</code> field. Access tokens are long-lived (1 year), revocable, and device-bound.</span>
+                    </li>
+                    <li style="display:flex;gap:10px;font-size:13px;">
+                        <span style="color:var(--success);font-weight:700;shrink:0;">fix</span>
+                        <span><code>email_verified_at</code> added to the <code>User</code> fillable — OTP verification was silently failing to persist it, blocking API login.</span>
+                    </li>
+                </ul>
+            </div>
+
             <!-- v1.1.0 -->
             <div style="padding:20px 24px;border-bottom:1px solid var(--border);">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                     <span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--primary);">v1.1.0</span>
                     <span style="font-size:12px;color:var(--text-muted);">21 Sep 2026</span>
-                    <span style="margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.25);">Latest</span>
                 </div>
                 <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
                     <li style="display:flex;gap:10px;font-size:13px;">
